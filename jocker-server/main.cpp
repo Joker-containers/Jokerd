@@ -8,8 +8,17 @@
 #include <string.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+#include <sys/cdefs.h>
+#include <sys/types.h>
+#include <sys/mount.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string>
+#include <fstream>
+#include <sys/mount.h>
 
 constexpr size_t CHILD_STACK_SIZE = 1024*1024; // Megabyte /* Stack size for cloned child */
+const std::string CGROUP_DIR = "/sys/fs/cgroup/cpu"; // Cgroup path
 
 static int              /* Start function for cloned child */
 child_function(void *arg)
@@ -42,6 +51,7 @@ child_function(void *arg)
 
     auto error = execvp(static_cast<char *>(arg), new_argv); // TODO: handle the errors
     perror("execvp");
+    return 0;
 }
 
 void create_container(char *progname){
@@ -55,6 +65,18 @@ void create_container(char *progname){
     struct utsname  uts;
 
     {
+        //Or before utsname???
+        //Adjust parameters of container
+        std::string cpu_quota_path = CGROUP_DIR + "/jocker" + "/cpu.cfs_quota_us";
+        std::ofstream cpu_quota_file(cpu_quota_path);
+        if (!cpu_quota_file) {
+            perror("opening cpu quota file");
+            exit(EXIT_FAILURE);
+        }
+        cpu_quota_file << 50000; // Should be as container argument
+        cpu_quota_file.close();
+
+
         // That's just a temporary area of memory reserved for child process' initial stack, before it gets cloned()
         // (actually don't know if it works the way I think yet)
         char child_stack[CHILD_STACK_SIZE];
@@ -74,6 +96,17 @@ void create_container(char *progname){
         if (pid == -1)
             err(EXIT_FAILURE, "clone"); // TODO: handle this
         printf("clone() returned %jd\n", (intmax_t) pid);
+
+        // Add child process to container
+        std::string tasks_path = CGROUP_DIR + "/jocker" + "/tasks";
+        std::ofstream tasks_file(tasks_path);
+        if (!tasks_file) {
+            perror("opening tasks file");
+            exit(EXIT_FAILURE);
+        }
+        tasks_file << pid;
+        // And $$ too???
+        tasks_file.close();
 
         /* Parent falls through to here */
 
@@ -112,7 +145,21 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
 
+    // Mount against cgroup fs
+    if (mkdir(CGROUP_DIR.c_str(), 0755) != -1 && errno != EEXIST) {
+        perror("mkdir");
+        exit(EXIT_FAILURE);
+    }
+    mount("none", CGROUP_DIR.c_str(), NULL, MS_BIND, NULL);
+
+
+    // Create a cgroup directory for the container
+    std::string container_dir = CGROUP_DIR + "/jocker";
+    if (mkdir(container_dir.c_str(), 0755) != -1 && errno != EEXIST) {
+        perror("mkdir");
+        exit(EXIT_FAILURE);
+    }
+
     create_container(argv[1]);
-    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
