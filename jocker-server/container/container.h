@@ -3,12 +3,15 @@
 
 #include "cgroup.h"
 #include "ns_group.h"
+#include "container_options.h"
 #include <string>
 
 
 // A class to contain info about container: resource controllers settings, namespaces configurations etc.
 
 class container {
+public:
+    container(const container_options &opts);
 private:
     // Can we rely on info about container contained in this instance?
     // If some external impact on configs was spotted... Well that's user's problems know, so we invalidate this object... Or no?
