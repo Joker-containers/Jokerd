@@ -12,7 +12,7 @@ void uts_ns::setup_ns(const ns_conf_repository &opts) {
 
 }
 
-void uts_ns::init_external(const ns_conf_repository &opts) {
+void uts_ns::init_internal(const ns_conf_repository &opts) {
     auto conf = opts.uts_ns_configs.at(m_name);
 
     struct utsname uts;
@@ -23,8 +23,9 @@ void uts_ns::init_external(const ns_conf_repository &opts) {
         err(EXIT_FAILURE, "sethostname");
 
     /* Retrieve and display hostname. */
-
     if (uname(&uts) == -1)
         err(EXIT_FAILURE, "uname");
-    printf("uts.nodename in child:  %s\n", uts.nodename);
+    std::cout << "Child host machine name: " << uts.nodename << std::endl;
+
+//    printf("uts.nodename in child:  %s\n", uts.nodename);
 }

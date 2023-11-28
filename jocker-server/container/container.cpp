@@ -112,7 +112,7 @@ static int child_function(void *arg){
 
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->init_external(parent_info->repo);
+            ns_collection[i]->init_internal(parent_info->repo);
         }
     }
 

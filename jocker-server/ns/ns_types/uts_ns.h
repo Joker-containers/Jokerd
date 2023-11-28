@@ -17,7 +17,7 @@ public:
 
     void configure_ns(const ns_conf_repository &opts) override;
 
-    void init_external(const ns_conf_repository &opts) override;
+    void init_internal(const ns_conf_repository &opts) override;
 };
 
 
