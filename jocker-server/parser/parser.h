@@ -11,6 +11,7 @@ class Parser {
 public:
     explicit Parser(const std::string &file);
     container_options parse_options();
+    container_options parse_json(std::stringstream& ss);
 
 private:
     const std::string& file_name;

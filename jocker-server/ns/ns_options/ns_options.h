@@ -6,17 +6,19 @@
 #include <string>
 #include <stdexcept>
 
-class ns_options{
+class ns_options {
 public:
     ns_options();
 
     explicit ns_options(const std::vector<std::string> &opts);
 
-    [[nodiscard]] const std::vector<std::string> &get_required_ns() const{
+    explicit ns_options(const std::vector<std::string>& ns_collection, const std::vector<bool>& entry_valid);
+
+    [[nodiscard]] const std::vector<std::string> &get_required_ns() const {
         return m_ns_collection;
     }
 
-    [[nodiscard]] const std::vector<bool> &get_ns_mask() const{
+    [[nodiscard]] const std::vector<bool> &get_ns_mask() const {
         return m_entry_valid;
     }
 
