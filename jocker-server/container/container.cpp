@@ -58,36 +58,42 @@ static std::shared_ptr<ns> create_namespace(ns_type tp, const std::string &ns_na
     return new_ns;
 }
 
-static int              /* Start function for cloned child */
-child_function(void *arg)
-{
-    struct utsname uts;
+// TODO: transfer this to utilities
+void deleteCharPtrArray(char **av) {
+    if (av) {
+        for (size_t i = 0; av[i]; ++i) {
+            delete[] av[i];
+        }
+        delete[] av;
+    }
+}
 
-    /* Change hostname in UTS namespace of child. */
+std::unique_ptr<char *[], void(*)(char **)> createCharPtrArray(const std::vector<std::string> &tokens) {
+    std::unique_ptr<char *[], void(*)(char **)> ptr(new char *[tokens.size() + 1], deleteCharPtrArray);
+    ptr[tokens.size()] = nullptr;
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        ptr[i] = new char[tokens[i].length() + 1];
+        std::strcpy(ptr[i], tokens[i].c_str());
+    }
+    return ptr;
+}
 
-    if (sethostname(static_cast<char *>(arg), strlen(static_cast<char *>(arg))) == -1)
-        err(EXIT_FAILURE, "sethostname");
+//
 
-    /* Retrieve and display hostname. */
+static int child_function(void *opts){
+    auto converted_opts = static_cast<container_options *>(opts);
 
-    if (uname(&uts) == -1)
-        err(EXIT_FAILURE, "uname");
-    printf("uts.nodename in child:  %s\n", uts.nodename);
+//    std::shared_ptr<ns> new_ns;
+//    for (const auto &entry: ns_to_create) {
+//        int fd = get_ns_handle(entry.first, pid);
+//        new_ns = std::move(create_namespace(entry.first, entry.second, fd, pid));
+//        m_namespaces.add_ns(entry.first, new_ns);
+//    }
+//    init_namespaces(opts.my_ns_opts);
 
-    /* Keep the namespace open for a while, by sleeping.
-       This allows some experimentation--for example, another
-       process might join the namespace. */
-
-    sleep(5);
-
-    // TODO: make wrapper function for this stuff
-    char **new_argv = new char *[2];
-    char *progname_copy = new char [strlen(static_cast<char *>(arg)) + 1];
-    strcpy(progname_copy, static_cast<char *>(arg));
-    new_argv[0] = progname_copy;
-    new_argv[1] = nullptr;
-
-    auto error = execvp(static_cast<char *>(arg), new_argv); // TODO: handle the errors
+    auto progname = strdup(converted_opts->bin_path.c_str());
+    auto args_ptr = createCharPtrArray(converted_opts->bin_arguments);
+    auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
     perror("execvp");
     return 0;
 }
@@ -101,7 +107,7 @@ static int get_ns_handle(ns_type tp, pid_t pid){
     return fd;
 }
 
-pid_t perform_clone(int new_ns_flags){
+pid_t perform_clone(int new_ns_flags, const container_options &opts){
     pid_t           pid;
 
     char child_stack[CHILD_STACK_SIZE];
@@ -114,7 +120,8 @@ pid_t perform_clone(int new_ns_flags){
     /* Create child that has its own namespaces;
        child commences execution in childFunc(). */
     void *test = strdup("test"); // Test
-    pid = clone(child_function, &stackTop, new_ns_flags | SIGCHLD, test); // Last argument is just for testing now
+    auto opts_copy = new container_options(opts);
+    pid = clone(child_function, &stackTop, new_ns_flags | SIGCHLD, static_cast<void *>(opts_copy)); // Last argument is just for testing now
 
     if (pid == -1) err(EXIT_FAILURE, "clone"); // TODO: handle this
 
@@ -133,7 +140,11 @@ void container::init_namespaces(const ns_options &opts) {
         }
     }
 
-    // TODO: init_external() etc
+    for (size_t i = 0; i < ns_collection.size(); ++i){
+        if (ns_collection_mask[i]){
+            ns_collection[i]->init_external();
+        }
+    }
 }
 
 container::container(const container_options &opts, d_resources &daemon) {
@@ -165,7 +176,7 @@ container::container(const container_options &opts, d_resources &daemon) {
         }
     }
 
-    pid_t pid = perform_clone(new_ns_flags);
+    pid_t pid = perform_clone(new_ns_flags, opts);
     // New namespaces are created now; we should create corresponding objects in the runtime.
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: ns_to_create) {
