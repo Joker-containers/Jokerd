@@ -11,8 +11,8 @@ class container_options {
 public:
     container_options(const container_options &other) = default;
 
-    ns_options my_ns_opts;
-    cgroup_options my_cgroup_opts;
+    ns_options namespace_options;
+    cgroup_options cgroup_options_m;
     std::string bin_path;
     std::vector<std::string> bin_arguments;
     std::string container_name;

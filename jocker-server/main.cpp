@@ -70,7 +70,7 @@ void create_container(char *progname){
         std::string cpu_quota_path = CGROUP_DIR + "/jocker" + "/cpu.cfs_quota_us";
         std::ofstream cpu_quota_file(cpu_quota_path);
         if (!cpu_quota_file) {
-            perror("opening cpu quota file");
+            perror("opening cpu quota file_name");
             exit(EXIT_FAILURE);
         }
         cpu_quota_file << 50000; // Should be as container argument
@@ -101,7 +101,7 @@ void create_container(char *progname){
         std::string tasks_path = CGROUP_DIR + "/jocker" + "/tasks";
         std::ofstream tasks_file(tasks_path);
         if (!tasks_file) {
-            perror("opening tasks file");
+            perror("opening tasks file_name");
             exit(EXIT_FAILURE);
         }
         tasks_file << pid;
