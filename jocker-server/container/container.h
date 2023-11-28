@@ -4,14 +4,24 @@
 #include "cgroup.h"
 #include "ns_group.h"
 #include "container_options.h"
+#include "ns_pool.h"
 #include <string>
+#include <sys/utsname.h>
+#include <err.h>
+#include <csignal>
+#include <sys/wait.h>
 
+struct d_resources{
+    ns_pool& d_ns_pool;
+    // Cgroup pool to be added?
+};
 
-// A class to contain info about container: resource controllers settings, namespaces configurations etc.
+extern const std::unordered_map<ns_type, int> ns_clone_flag;
 
+/* A class to contain info about container: resource controllers settings, namespaces configurations etc. */
 class container {
 public:
-    container(const container_options &opts);
+    container(const container_options &opts, d_resources &daemon);
 private:
     // Can we rely on info about container contained in this instance?
     // If some external impact on configs was spotted... Well that's user's problems know, so we invalidate this object... Or no?

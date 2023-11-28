@@ -1,0 +1,10 @@
+#ifndef JOCKER_SERVER_TIME_NS_CONFIG_H
+#define JOCKER_SERVER_TIME_NS_CONFIG_H
+
+
+class time_ns_config {
+
+};
+
+
+#endif //JOCKER_SERVER_TIME_NS_CONFIG_H

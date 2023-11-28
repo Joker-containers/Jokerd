@@ -4,7 +4,7 @@
 
 #include <string>
 #include "cgroup_options.h"
-#include "ns_options.h"
+#include "ns_options/ns_options.h"
 
 
 class container_options {

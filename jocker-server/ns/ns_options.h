@@ -1,8 +1,0 @@
-#ifndef JOCKER_SERVER_NS_OPTIONS_H
-#define JOCKER_SERVER_NS_OPTIONS_H
-
-#endif //JOCKER_SERVER_NS_OPTIONS_H
-
-class ns_options{
-
-};

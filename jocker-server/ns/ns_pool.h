@@ -8,29 +8,23 @@
 #include "ns_types/time_ns.h"
 #include "ns_types/user_ns.h"
 #include "ns_types/uts_ns.h"
+#include "ns_types/ns_type.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
 #include <stdexcept>
+#include <algorithm>
 
 class ns_pool {
 public:
-    std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name){
-        std::shared_ptr<ns> result = nullptr; // In case namespace with such a name is not found, function returns nullptr
-        auto it = ns_type_map.find(tp);
-        if (it != ns_type_map.end()) {
-            auto &tp_ns_collection = it->second;
-            for (auto &ns_entry: tp_ns_collection){
-                if (ns_entry->get_name() == ns_name){
-                    result = ns_entry;
-                }
-            }
-        } else {
-            throw std::runtime_error("Unexpected namespace type queried from ns_pool!");
-        }
-        return result;
-    }
-    
+    bool exists_ns(ns_type tp, const std::string &ns_name);
+
+    void register_ns(ns_type tp, const std::shared_ptr<ns>& to_register);
+
+    std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name);
+
+    bool delete_ns(ns_type tp, const std::string &ns_name);
+
 private:
     std::unordered_map<ns_type, std::vector<std::shared_ptr<ns>> &> ns_type_map{
             {IPC, all_ipc_ns},
