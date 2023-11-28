@@ -11,9 +11,10 @@ class container_options {
 public:
     ns_options namespace_options;
     cgroup_options cgroup_options;
-    std::string bin_path;
     std::vector<std::string> bin_arguments;
     std::string container_name;
+
+    std::string bin_path;
 };
 
 

@@ -28,3 +28,7 @@ ns_options::ns_options(const std::vector<std::string> &opts) {
         }
     }
 }
+
+ns_options::ns_options(const std::vector<std::string> &ns_collection, const std::vector<bool> &entry_valid) : m_ns_collection(ns_collection), m_entry_valid(entry_valid) {
+
+}
