@@ -25,19 +25,12 @@ container_options Parser::parse_options() {
     buffer << file.rdbuf();
 
 
+    container_options options;
     boost::property_tree::ptree pt;
 
+    boost::property_tree::ptree personTree = pt.get_child("person");
 
-
-    container_options options;
-    options.namespace_options = parse_ns_options(json_string);
 
     file.close(); // success case
     return {};
-}
-
-ns_options Parser::parse_ns_options(const std::string& jsonString) {
-    // parsing ns_options
-    ns_options data;
-
 }
