@@ -1,5 +1,7 @@
 #include "container.h"
 
+#include <utility>
+
 constexpr size_t CHILD_STACK_SIZE = 1024*1024; // Megabyte /* Stack size for cloned child */
 
 const std::unordered_map<ns_type, int> ns_clone_flag = {
@@ -32,25 +34,25 @@ static std::shared_ptr<ns> create_namespace(ns_type tp, const std::string &ns_na
     std::shared_ptr<ns> new_ns;
     switch (tp) {
         case IPC:
-            new_ns = std::make_shared<ipc_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<ipc_ns>(ns_name, fd, tp, pid);
             break;
         case NETWORK:
-            new_ns = std::make_shared<net_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<net_ns>(ns_name, fd, tp, pid);
             break;
         case MOUNT:
-            new_ns = std::make_shared<mnt_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<mnt_ns>(ns_name, fd, tp, pid);
             break;
         case PID:
-            new_ns = std::make_shared<pid_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<pid_ns>(ns_name, fd, tp, pid);
             break;
         case TIME:
-            new_ns = std::make_shared<time_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<time_ns>(ns_name, fd, tp, pid);
             break;
         case USER:
-            new_ns = std::make_shared<user_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<user_ns>(ns_name, fd, tp, pid);
             break;
         case UTS:
-            new_ns = std::make_shared<uts_ns>(ns_name, fd, pid);
+            new_ns = std::make_shared<uts_ns>(ns_name, fd, tp, pid);
             break;
         default:
             throw std::runtime_error("Unsupported namespace type!");
@@ -103,25 +105,26 @@ static int child_function(void *arg){
     auto ns_collection_mask = parent_info->namespaces.get_ns_mask();
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->setup_ns(parent_info->opts.namespace_options);
+            ns_collection[i]->setup_ns(parent_info->repo);
         }
     }
 
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->init_external();
+            ns_collection[i]->init_external(parent_info->repo);
         }
     }
 
     // TODO: close fds
     auto progname = strdup(parent_info->opts.bin_path.c_str());
     auto args_ptr = createCharPtrArray(parent_info->opts.bin_arguments);
+    sleep(3);
     auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
     perror("execvp");
     return 0;
 }
 
-pid_t container::perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create){
+pid_t container::perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create, ns_conf_repository &repo){
     pid_t           pid;
 
     char child_stack[CHILD_STACK_SIZE];
@@ -135,7 +138,7 @@ pid_t container::perform_clone(int new_ns_flags, const container_options &opts, 
        child commences execution in childFunc(). */
     void *test = strdup("test"); // Test
 
-    auto *arg = new child_argument(ns_to_create, m_namespaces, opts);
+    auto *arg = new child_argument(ns_to_create, m_namespaces, opts, repo);
     pid = clone(child_function, &stackTop, new_ns_flags | SIGCHLD, static_cast<void *>(arg)); // Last argument is just for testing now
     delete arg;
 
@@ -147,7 +150,7 @@ pid_t container::perform_clone(int new_ns_flags, const container_options &opts, 
     return pid;
 }
 
-void container::init_namespaces(const ns_options &opts) {
+void container::init_namespaces(const ns_conf_repository &opts) {
     auto ns_collection = m_namespaces.get_required_ns();
     auto ns_collection_mask = m_namespaces.get_ns_mask();
     for (size_t i = 0; i < ns_collection.size(); ++i){
@@ -158,7 +161,7 @@ void container::init_namespaces(const ns_options &opts) {
 
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->init_external();
+            ns_collection[i]->init_external(opts);
         }
     }
 }
@@ -192,7 +195,7 @@ container::container(const container_options &opts, d_resources &daemon) {
         }
     }
 
-    pid_t pid = perform_clone(new_ns_flags, opts, ns_to_create);
+    pid_t pid = perform_clone(new_ns_flags, opts, ns_to_create, daemon.conf_repo);
     // New namespaces are created now; we should create corresponding objects in the runtime.
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: ns_to_create) {
@@ -201,7 +204,8 @@ container::container(const container_options &opts, d_resources &daemon) {
         daemon.d_ns_pool.register_ns(entry.first, new_ns);
         m_namespaces.add_ns(entry.first, new_ns);
     }
-    init_namespaces(opts.namespace_options);
+    init_namespaces(daemon.conf_repo);
 }
 
-child_argument::child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts): opts(other_opts), ns_to_create(other_ns_to_create), namespaces(other_ns) {}
+child_argument::child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts, ns_conf_repository other_repo): opts(other_opts), ns_to_create(other_ns_to_create), namespaces(other_ns),
+                                                                                                                                                                               repo(std::move(other_repo)) {}

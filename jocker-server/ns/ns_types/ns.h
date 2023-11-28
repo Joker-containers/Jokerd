@@ -2,8 +2,10 @@
 #define JOCKER_SERVER_NS_H
 
 #include "ns_options/ns_options.h"
+#include "ns_options/ns_conf_repository.h"
 #include <string>
 #include <unistd.h>
+#include <utility>
 
 typedef int fd_t;
 
@@ -18,21 +20,22 @@ public:
 
     ns() = delete;
 
-    ns(std::string name, int fd, pid_t process_pid);
+    ns(std::string name, int fd, ns_type tp, pid_t process_pid);
 
     void add_pid(pid_t pid);
 
-    virtual void setup_ns(const ns_options &opts) = 0;
+    virtual void setup_ns(const ns_conf_repository &opts) = 0;
 
-    virtual void configure_ns(const ns_options &opts) = 0;
+    virtual void configure_ns(const ns_conf_repository &opts) = 0;
 
-    virtual void init_internal();
+    virtual void init_internal(const ns_conf_repository &opts);
 
-    virtual void init_external();
+    virtual void init_external(const ns_conf_repository &opts);
 
     ~ns();
 
-private:
+protected:
+    ns_type m_tp;
     std::string m_name;
     fd_t m_fd;
     std::vector<pid_t> m_processes_inside;

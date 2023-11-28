@@ -5,6 +5,7 @@
 #include "ns_group.h"
 #include "container_options.h"
 #include "ns_pool.h"
+#include "ns_options/ns_conf_repository.h"
 #include <string>
 #include <sys/utsname.h>
 #include <err.h>
@@ -15,6 +16,7 @@
 
 struct d_resources{
     ns_pool& d_ns_pool;
+    ns_conf_repository& conf_repo;
     // Cgroup pool to be added?
 };
 
@@ -25,10 +27,10 @@ class container {
 public:
     container(const container_options &opts, d_resources &daemon);
 
-    pid_t perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create);
+    pid_t perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create, ns_conf_repository &repo);
 
 private:
-    void init_namespaces(const ns_options &opts);
+    void init_namespaces(const ns_conf_repository &opts);
 
     // Can we rely on info about container contained in this instance?
     // If some external impact on configs was spotted... Well that's user's problems know, so we invalidate this object... Or no?
@@ -45,10 +47,11 @@ private:
 };
 
 struct child_argument {
-    child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts);
+    child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts, ns_conf_repository repo);
     std::vector<std::pair<ns_type, std::string>> ns_to_create;
     ns_group namespaces;
     container_options opts;
+    ns_conf_repository repo;
 };
 
 

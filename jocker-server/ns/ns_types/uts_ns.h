@@ -3,16 +3,21 @@
 
 
 #include "ns.h"
+#include <sys/utsname.h>
+#include <cstring>
+#include <err.h>
 
 class uts_ns: public ns {
 public:
     uts_ns() = delete;
 
-    uts_ns(std::string name, int fd, pid_t process_pid);
+    uts_ns(std::string name, int fd, ns_type tp, pid_t process_pid);
 
-    void setup_ns(const ns_options &opts) override;
+    void setup_ns(const ns_conf_repository &opts) override;
 
-    void configure_ns(const ns_options &opts) override;
+    void configure_ns(const ns_conf_repository &opts) override;
+
+    void init_external(const ns_conf_repository &opts) override;
 };
 
 

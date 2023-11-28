@@ -2,8 +2,11 @@
 #define JOCKER_SERVER_UTS_NS_CONFIG_H
 
 
-class uts_ns_config {
+#include <string>
 
+class uts_ns_config {
+public:
+    std::string hostname;
 };
 
 

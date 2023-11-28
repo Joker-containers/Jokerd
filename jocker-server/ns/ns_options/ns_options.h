@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
+#include <cassert>
 
 class ns_options {
 public:
@@ -21,6 +22,8 @@ public:
     [[nodiscard]] const std::vector<bool> &get_ns_mask() const {
         return m_entry_valid;
     }
+
+    void add_namespace(ns_type tp, std::string &ns_name);
 
 private:
     std::vector<std::string> m_ns_collection;

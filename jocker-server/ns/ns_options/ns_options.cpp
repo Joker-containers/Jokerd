@@ -32,3 +32,9 @@ ns_options::ns_options(const std::vector<std::string> &opts) {
 ns_options::ns_options(const std::vector<std::string> &ns_collection, const std::vector<bool> &entry_valid) : m_ns_collection(ns_collection), m_entry_valid(entry_valid) {
 
 }
+
+void ns_options::add_namespace(ns_type tp, std::string &ns_name) {
+    assert(tp < NS_TYPES_NUM);
+    m_ns_collection[tp] = ns_name;
+    m_entry_valid[tp] = true;
+}
