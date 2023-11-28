@@ -10,6 +10,8 @@
 #include <err.h>
 #include <csignal>
 #include <sys/wait.h>
+#include <sstream>
+#include <fcntl.h>
 
 struct d_resources{
     ns_pool& d_ns_pool;
@@ -23,9 +25,11 @@ class container {
 public:
     container(const container_options &opts, d_resources &daemon);
 private:
+    void init_namespaces(const ns_options &opts);
+
     // Can we rely on info about container contained in this instance?
     // If some external impact on configs was spotted... Well that's user's problems know, so we invalidate this object... Or no?
-    bool valid;
+    bool valid{};
 
     // Container name
     std::string m_cname;

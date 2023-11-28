@@ -18,6 +18,10 @@ public:
 
     ns() = delete;
 
+    ns(std::string name, int fd, pid_t process_pid);
+
+    void add_pid(pid_t pid);
+
     virtual void setup_ns(const ns_options &opts) = 0;
 
     virtual void configure_ns(const ns_options &opts) = 0;
@@ -31,6 +35,7 @@ public:
 private:
     std::string m_name;
     fd_t m_fd;
+    std::vector<pid_t> m_processes_inside;
 };
 
 
