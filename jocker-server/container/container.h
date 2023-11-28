@@ -24,6 +24,9 @@ extern const std::unordered_map<ns_type, int> ns_clone_flag;
 class container {
 public:
     container(const container_options &opts, d_resources &daemon);
+
+    pid_t perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create);
+
 private:
     void init_namespaces(const ns_options &opts);
 
@@ -42,6 +45,7 @@ private:
 };
 
 struct child_argument {
+    child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts);
     std::vector<std::pair<ns_type, std::string>> ns_to_create;
     ns_group namespaces;
     container_options opts;
