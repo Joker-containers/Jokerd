@@ -1,4 +1,5 @@
 #include "container.h"
+#include <sched.h>          /* Definition of CLONE_* constants */
 
 constexpr size_t CHILD_STACK_SIZE = 1024*1024; // Megabyte /* Stack size for cloned child */
 
