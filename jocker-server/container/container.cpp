@@ -1,4 +1,5 @@
 #include "container.h"
+#include <sched.h>          /* Definition of CLONE_* constants */
 
 #include <utility>
 

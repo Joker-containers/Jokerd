@@ -7,7 +7,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "parser.h"
-#include "ns_types/ns_type.h"
 
 Parser::Parser(const std::string &file_name) : file_name(file_name) {}
 
@@ -43,17 +42,11 @@ container_options Parser::parse_json(std::stringstream &ss) {
         m_ns_collection.push_back(ns.second.get_value<std::string>());
     }
 
-    boost::property_tree::ptree m_entry_valid_tree = ns_options_tree.get_child("m_entry_valid");
-    std::vector<bool> m_entry_valid;
-    for (const auto& flag : m_entry_valid_tree) {
-        m_entry_valid.push_back(flag.second.get_value<bool>());
-    }
-
-    ns_options namespace_options(m_ns_collection, m_entry_valid);
+    ns_options namespace_options(m_ns_collection);
 
     // CGROUP OPTIONS
 
-    boost::property_tree::ptree cgroup_options_tree = pt.get_child("cgroup_options");
+    boost::property_tree::ptree cgroup_options_tree = pt.get_child("cgroup_options_m");
 
 
     // BIN ARGS
@@ -66,5 +59,5 @@ container_options Parser::parse_json(std::stringstream &ss) {
     // CONTAINER NAME
     auto container_name = pt.get<std::string>("container_name");
 
-    return container_options(namespace_options, {}, bin_arguments, container_name, "");
+    return container_options{namespace_options, {}, bin_arguments, container_name, ""};
 }
