@@ -103,7 +103,7 @@ static int child_function(void *opts){
     auto ns_collection_mask = parent_info->namespaces.get_ns_mask();
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->setup_ns(parent_info->opts.my_ns_opts);
+            ns_collection[i]->setup_ns(parent_info->opts.namespace_options);
         }
     }
 
@@ -162,8 +162,8 @@ container::container(const container_options &opts, d_resources &daemon) {
     // mount -t proc proc /proc In the new fs
     int new_ns_flags = 0;
     std::vector<std::pair<ns_type, std::string>> ns_to_create;
-    const auto &ns_names = opts.my_ns_opts.get_required_ns();
-    const auto &ns_mask = opts.my_ns_opts.get_ns_mask();
+    const auto &ns_names = opts.namespace_options.get_required_ns();
+    const auto &ns_mask = opts.namespace_options.get_ns_mask();
 
     assert(ns_names.size() == NS_TYPES_NUM);
 
@@ -194,5 +194,5 @@ container::container(const container_options &opts, d_resources &daemon) {
         daemon.d_ns_pool.register_ns(entry.first, new_ns);
         m_namespaces.add_ns(entry.first, new_ns);
     }
-    init_namespaces(opts.my_ns_opts);
+    init_namespaces(opts.namespace_options);
 }
