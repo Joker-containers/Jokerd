@@ -9,6 +9,8 @@
 
 class container_options {
 public:
+    container_options(const container_options &other) = default;
+
     ns_options my_ns_opts;
     cgroup_options my_cgroup_opts;
     std::string bin_path;

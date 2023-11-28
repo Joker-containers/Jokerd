@@ -89,8 +89,8 @@ static int get_ns_handle(ns_type tp, pid_t pid){
     return fd;
 }
 
-static int child_function(void *opts){
-    auto parent_info = static_cast<child_argument *>(opts);
+static int child_function(void *arg){
+    auto parent_info = static_cast<child_argument *>(arg);
     pid_t pid = getpid();
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: parent_info->ns_to_create) {
@@ -107,6 +107,12 @@ static int child_function(void *opts){
         }
     }
 
+    for (size_t i = 0; i < ns_collection.size(); ++i){
+        if (ns_collection_mask[i]){
+            ns_collection[i]->init_external();
+        }
+    }
+
     // TODO: close fds
     auto progname = strdup(parent_info->opts.bin_path.c_str());
     auto args_ptr = createCharPtrArray(parent_info->opts.bin_arguments);
@@ -115,7 +121,7 @@ static int child_function(void *opts){
     return 0;
 }
 
-pid_t perform_clone(int new_ns_flags, const container_options &opts){
+pid_t container::perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create){
     pid_t           pid;
 
     char child_stack[CHILD_STACK_SIZE];
@@ -128,8 +134,10 @@ pid_t perform_clone(int new_ns_flags, const container_options &opts){
     /* Create child that has its own namespaces;
        child commences execution in childFunc(). */
     void *test = strdup("test"); // Test
-    auto opts_copy = new container_options(opts);
-    pid = clone(child_function, &stackTop, new_ns_flags | SIGCHLD, static_cast<void *>(opts_copy)); // Last argument is just for testing now
+
+    auto *arg = new child_argument(ns_to_create, m_namespaces, opts);
+    pid = clone(child_function, &stackTop, new_ns_flags | SIGCHLD, static_cast<void *>(arg)); // Last argument is just for testing now
+    delete arg;
 
     if (pid == -1) err(EXIT_FAILURE, "clone"); // TODO: handle this
 
@@ -184,8 +192,7 @@ container::container(const container_options &opts, d_resources &daemon) {
         }
     }
 
-    child_argument *arg = new child_argument(ns_to_create, m_namespaces, opts);
-    pid_t pid = perform_clone(new_ns_flags, static_cast<void *>(arg));
+    pid_t pid = perform_clone(new_ns_flags, opts, ns_to_create);
     // New namespaces are created now; we should create corresponding objects in the runtime.
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: ns_to_create) {
@@ -196,3 +203,5 @@ container::container(const container_options &opts, d_resources &daemon) {
     }
     init_namespaces(opts.my_ns_opts);
 }
+
+child_argument::child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, ns_group &other_ns, const container_options &other_opts): opts(other_opts), ns_to_create(other_ns_to_create), namespaces(other_ns) {}
