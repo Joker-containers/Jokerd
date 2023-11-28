@@ -80,24 +80,6 @@ std::unique_ptr<char *[], void(*)(char **)> createCharPtrArray(const std::vector
 
 //
 
-static int child_function(void *opts){
-    auto converted_opts = static_cast<container_options *>(opts);
-
-//    std::shared_ptr<ns> new_ns;
-//    for (const auto &entry: ns_to_create) {
-//        int fd = get_ns_handle(entry.first, pid);
-//        new_ns = std::move(create_namespace(entry.first, entry.second, fd, pid));
-//        m_namespaces.add_ns(entry.first, new_ns);
-//    }
-//    init_namespaces(opts.my_ns_opts);
-
-    auto progname = strdup(converted_opts->bin_path.c_str());
-    auto args_ptr = createCharPtrArray(converted_opts->bin_arguments);
-    auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
-    perror("execvp");
-    return 0;
-}
-
 static int get_ns_handle(ns_type tp, pid_t pid){
     auto path = get_ns_handle_path(tp, pid);
     int fd = open(path.c_str(), O_RDONLY);
@@ -105,6 +87,32 @@ static int get_ns_handle(ns_type tp, pid_t pid){
         throw std::runtime_error("Failed to open namespace handle!");
     }
     return fd;
+}
+
+static int child_function(void *opts){
+    auto parent_info = static_cast<child_argument *>(opts);
+    pid_t pid = getpid();
+    std::shared_ptr<ns> new_ns;
+    for (const auto &entry: parent_info->ns_to_create) {
+        int fd = get_ns_handle(entry.first, pid);
+        new_ns = std::move(create_namespace(entry.first, entry.second, fd, pid));
+        parent_info->namespaces.add_ns(entry.first, new_ns);
+    }
+
+    auto ns_collection = parent_info->namespaces.get_required_ns();
+    auto ns_collection_mask = parent_info->namespaces.get_ns_mask();
+    for (size_t i = 0; i < ns_collection.size(); ++i){
+        if (ns_collection_mask[i]){
+            ns_collection[i]->setup_ns(parent_info->opts.my_ns_opts);
+        }
+    }
+
+    // TODO: close fds
+    auto progname = strdup(parent_info->opts.bin_path.c_str());
+    auto args_ptr = createCharPtrArray(parent_info->opts.bin_arguments);
+    auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
+    perror("execvp");
+    return 0;
 }
 
 pid_t perform_clone(int new_ns_flags, const container_options &opts){
@@ -176,7 +184,8 @@ container::container(const container_options &opts, d_resources &daemon) {
         }
     }
 
-    pid_t pid = perform_clone(new_ns_flags, opts);
+    child_argument *arg = new child_argument(ns_to_create, m_namespaces, opts);
+    pid_t pid = perform_clone(new_ns_flags, static_cast<void *>(arg));
     // New namespaces are created now; we should create corresponding objects in the runtime.
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: ns_to_create) {

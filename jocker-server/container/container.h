@@ -41,9 +41,10 @@ private:
     ns_group m_namespaces;
 };
 
-struct child_argument{
+struct child_argument {
     std::vector<std::pair<ns_type, std::string>> ns_to_create;
-
+    ns_group namespaces;
+    container_options opts;
 };
 
 
