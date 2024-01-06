@@ -5,16 +5,46 @@
 #ifndef JOCKER_SERVER_DAEMON_H
 #define JOCKER_SERVER_DAEMON_H
 
-extern const int PORT;
+#include <cstdint>
+#include "ns_pool.h"
+#include "ns_options/ns_conf_repository.h"
 
-void logMessage(const std::string& message, bool to_cerr);
+class Daemon {
+public:
+    explicit Daemon(uint16_t port, const std::string& log_file_path);
 
-void receiveFileandConfig(int client_socket);
+    void process_request();
 
-void sendLogs(int client_socket);
+    void execute_request();
 
-void processClientRequest(int client_socket);
+    void send_logs();
 
-void setupServer();
+    void send_trace();
+
+    void run_container();
+
+    static void log_message(const std::string& message, bool to_cerr = false);
+
+private:
+    uint16_t port;
+    std::string log_file_path;
+    uint8_t current_request;
+    int client_socket;
+    int server_socket;
+    sockaddr_in server_addr;
+    sockaddr_in client_addr;
+    ns_pool pool;
+    ns_conf_repository repo;
+};
+
+void log_message(const std::string& message, bool to_cerr);
+
+void get_file_and_config(int client_socket);
+
+void send_logs(int client_socket);
+
+uint8_t process_request(int client_socket);
+
+void setup_server();
 
 #endif //JOCKER_SERVER_DAEMON_H

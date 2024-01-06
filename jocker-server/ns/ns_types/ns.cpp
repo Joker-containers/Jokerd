@@ -14,7 +14,7 @@ void ns::init_internal(const ns_conf_repository &opts) {
 }
 
 /* A function for namespace initialization from the outside of this namespace i.e. it's called from the
- * parent daemon (likely superuser) process */
+ * parent Daemon (likely superuser) process */
 void ns::init_external(const ns_conf_repository &opts) {
 
 }
