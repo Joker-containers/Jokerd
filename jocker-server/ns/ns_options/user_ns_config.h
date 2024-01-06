@@ -1,0 +1,10 @@
+#ifndef JOCKER_SERVER_USER_NS_CONFIG_H
+#define JOCKER_SERVER_USER_NS_CONFIG_H
+
+
+class user_ns_config {
+
+};
+
+
+#endif //JOCKER_SERVER_USER_NS_CONFIG_H
