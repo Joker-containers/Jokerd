@@ -1,3 +1,7 @@
+//
+// Created by Nazar Demchuk on 06.01.2024.
+//
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -5,12 +9,13 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <mutex>
+#include "daemon.h"
 
 const int PORT = 12345;
 
-void logMessage(const std::string& message, bool tocerr = false) {
+void logMessage(const std::string& message, bool to_cerr = false) {
 
-    if (tocerr) {
+    if (to_cerr) {
         std::cerr << message << std::endl;
     } else {
         std::cout << message << std::endl;
@@ -26,7 +31,7 @@ void logMessage(const std::string& message, bool tocerr = false) {
     logsFile.close();
 }
 
-void receiveFileandConfig(int clientSocket) {
+void receiveFileandConfig(int client_socket) {
     std::ofstream logsFile("containers.log", std::ios::app);
     if (!logsFile.is_open()) {
         std::cerr << "Error: Unable to open logs file." << std::endl;
@@ -37,34 +42,34 @@ void receiveFileandConfig(int clientSocket) {
 
     logMessage("\nReceiving binary filename size...");
     uint64_t binary_name_size;
-    recv(clientSocket, &binary_name_size, sizeof(binary_name_size), 0);
+    recv(client_socket, &binary_name_size, sizeof(binary_name_size), 0);
     logMessage("Received binary filename length: " + std::to_string(binary_name_size));
 
     logMessage("\nReceiving binary filename...");
     std::vector<char> binary_name(binary_name_size);
-    recv(clientSocket, binary_name.data(), binary_name_size, 0);
+    recv(client_socket, binary_name.data(), binary_name_size, 0);
     logMessage("Received binary filename: " + std::string(binary_name.data()));
 
     logMessage("\nReceiving binary size...");
     uint64_t binary_size;
-    recv(clientSocket, &binary_size, sizeof(binary_size), 0);
+    recv(client_socket, &binary_size, sizeof(binary_size), 0);
     logMessage("Received binary size: " + std::to_string(binary_size));
 
     logMessage("\nReceiving binary...");
     std::vector<char> binary(binary_size);
-    recv(clientSocket, binary.data(), binary_size, 0);
+    recv(client_socket, binary.data(), binary_size, 0);
     logMessage("Received binary.");
 
     std::string config_filename = std::string(binary_name.data()) + ".joker";
     logMessage("\nConfig filename is: " + config_filename);
     logMessage("Receiving config size...");
     uint64_t binary_config_size;
-    recv(clientSocket, &binary_config_size, sizeof(binary_config_size), 0);
+    recv(client_socket, &binary_config_size, sizeof(binary_config_size), 0);
     logMessage("Received config size: " + std::to_string(binary_config_size));
 
     logMessage("\nReceiving config...");
     std::vector<char> binary_config(binary_config_size);
-    recv(clientSocket, binary_config.data(), binary_config_size, 0);
+    recv(client_socket, binary_config.data(), binary_config_size, 0);
     logMessage("Received config.");
 
     std::ifstream check_file(binary_name.data());
@@ -87,7 +92,7 @@ void receiveFileandConfig(int clientSocket) {
     logMessage("Saved config file to " + config_filename + ".\n");
 }
 
-void sendLogs(int clientSocket) {
+void sendLogs(int client_socket) {
     std::ifstream logsFile("containers.log", std::ios::binary);
     if (!logsFile.is_open()) {
         std::cerr << "Error: Unable to open logs file." << std::endl;
@@ -98,19 +103,19 @@ void sendLogs(int clientSocket) {
                                   std::istreambuf_iterator<char>());
 
     uint64_t logsSize = logsContent.size();
-    send(clientSocket, logsContent.data(), logsSize, 0);
+    send(client_socket, logsContent.data(), logsSize, 0);
 
     logsFile.close();
 }
 
-void processClientRequest(int clientSocket) {
+void processClientRequest(int client_socket) {
     char firstByte;
-    recv(clientSocket, &firstByte, sizeof(firstByte), 0);
+    recv(client_socket, &firstByte, sizeof(firstByte), 0);
 
     if (firstByte == 0) {
-        receiveFileandConfig(clientSocket);
+        receiveFileandConfig(client_socket);
     } else if (firstByte == 1 || firstByte == 2) {
-        sendLogs(clientSocket);
+        sendLogs(client_socket);
     }
 }
 
@@ -156,10 +161,4 @@ void setupServer() {
     }
 
     close(serverSocket);
-}
-
-int main() {
-    setupServer();
-
-    return 0;
 }

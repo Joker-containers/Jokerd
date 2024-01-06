@@ -1,8 +1,0 @@
-{
-  "namespace_options": {
-    "m_ns_collection": ["UTS"]
-  },
-  "cgroup_options_m": {},
-  "bin_arguments": ["Hello, world!"],
-  "container_name": "test"
-}
