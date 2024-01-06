@@ -26,9 +26,8 @@
 //    sleep(5);
 //}
 
-void runtime() {
+void runtime(Daemon &daemon) {
     while (true) {
-        Daemon daemon(12345, "DAEMON.log");
         daemon.process_request();
         daemon.execute_request();
     }
@@ -36,9 +35,10 @@ void runtime() {
 
 
 int main(int argc, char *argv[]) {
+    Daemon daemon(10109, "./DAEMON.log");
     try {
-        runtime();
+        runtime(daemon);
     } catch (std::exception& e) {
-        Daemon::log_message(e.what(), true);
+        daemon.log_message(e.what(), true);
     }
 }

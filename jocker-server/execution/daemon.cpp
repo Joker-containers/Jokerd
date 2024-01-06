@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include <vector>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -75,7 +76,7 @@
 //    log_message("Saved config file to " + config_filename + ".\n");
 //}
 
-Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
+Daemon::Daemon(uint16_t port, std::string  log_file_path): log_file_path(std::move(log_file_path)) {
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
         log_message("Error: Unable to create socket.", true);
@@ -87,6 +88,7 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
     server_addr.sin_port = htons(port);
 
     if (bind(server_socket, reinterpret_cast<struct sockaddr *>(&server_addr), sizeof(server_addr)) == -1) {
+        perror("bind");
         log_message("Error: Unable to bind socket.", true);
         close(server_socket);
         exit(1);
@@ -141,6 +143,7 @@ void Daemon::send_trace() {
 
     uint64_t logsSize = logsContent.size();
     send(client_socket, logsContent.data(), logsSize, 0);
+    shutdown(client_socket, SHUT_WR);
 
     logsFile.close();
 }
@@ -157,7 +160,7 @@ void Daemon::log_message(const std::string& message, bool to_cerr) {
         std::cout << message << std::endl;
     }
 
-    std::ofstream logsFile("containers.log", std::ios::app);
+    std::ofstream logsFile(log_file_path, std::ios::app);
     if (!logsFile.is_open()) {
         std::cerr << "Error: Unable to open logs file." << std::endl;
         return;
