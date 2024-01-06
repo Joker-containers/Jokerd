@@ -7,12 +7,15 @@
 
 #include <netinet/in.h>
 #include <cstdint>
+#include <vector>
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
 
 class Daemon {
 public:
-    explicit Daemon(uint16_t port, std::string  log_file_path);
+    Daemon(uint16_t port, const std::string& log_file_path);
+
+    virtual ~Daemon();
 
     void process_request();
 
@@ -26,9 +29,11 @@ public:
 
     void log_message(const std::string& message, bool to_cerr = false);
 
+    std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> get_run_data();
+
 private:
     uint16_t port;
-    std::string log_file_path;
+    std::fstream log_file;
     uint8_t current_request;
     int client_socket;
     int server_socket;
