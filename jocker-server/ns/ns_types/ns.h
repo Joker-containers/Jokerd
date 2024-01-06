@@ -1,6 +1,7 @@
 #ifndef JOCKER_SERVER_NS_H
 #define JOCKER_SERVER_NS_H
 
+#include "syscall_wrapper.h"
 #include "ns_options/ns_options.h"
 #include "ns_options/ns_conf_repository.h"
 #include <string>

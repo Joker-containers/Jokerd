@@ -16,7 +16,7 @@ public:
 
     void add_ns(ns_type tp, std::shared_ptr<ns> &&to_add);
 
-    [[nodiscard]] const std::vector<std::shared_ptr<ns>> &get_required_ns() const{
+    [[nodiscard]] const std::vector<std::shared_ptr<ns>> &get_namespaces() const{
         return m_ns_collection;
     }
 

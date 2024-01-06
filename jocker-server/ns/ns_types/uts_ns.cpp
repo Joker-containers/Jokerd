@@ -13,19 +13,15 @@ void uts_ns::setup_ns(const ns_conf_repository &opts) {
 }
 
 void uts_ns::init_internal(const ns_conf_repository &opts) {
-    auto conf = opts.uts_ns_configs.at(m_name);
+    const auto &conf = opts.uts_ns_configs.at(m_name);
 
-    struct utsname uts;
+    struct utsname uts{};
 
     /* Change hostname in UTS namespace of child. */
-
-    if (sethostname(conf.hostname.c_str(), conf.hostname.size()) == -1)
-        err(EXIT_FAILURE, "sethostname");
+    syscall_wrapper(sethostname, "sethostname", conf.hostname.c_str(), conf.hostname.size());
 
     /* Retrieve and display hostname. */
-    if (uname(&uts) == -1)
-        err(EXIT_FAILURE, "uname");
-    std::cout << "Child host machine name: " << uts.nodename << std::endl;
+    syscall_wrapper(uname, "uname", &uts);
 
-//    printf("uts.nodename in child:  %s\n", uts.nodename);
+    std::cout << "Child host machine name: " << uts.nodename << std::endl;
 }

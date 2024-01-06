@@ -2,15 +2,20 @@
 
 
 
-std::shared_ptr<ns> ns_pool::get_ns(ns_type tp, const std::string &ns_name){
+std::shared_ptr<ns> ns_pool::get_ns(ns_type tp, const std::string &ns_name) const{
     std::shared_ptr<ns> result = nullptr; // In case namespace with such a name is not found, function returns nullptr
+    // TODO: throw exception
     const auto it = ns_type_map.find(tp);
     if (it != ns_type_map.end()) {
         const auto &tp_ns_collection = it->second;
         for (const auto &ns_entry: tp_ns_collection){
             if (ns_entry->get_name() == ns_name){
                 result = ns_entry;
+                break;
             }
+        }
+        if (!result.get()){
+            throw std::runtime_error("A non-existing namespace requested from namespace pool");
         }
     } else {
         throw std::runtime_error("Unexpected namespace type queried from ns_pool!");
@@ -45,7 +50,7 @@ bool ns_pool::delete_ns(ns_type tp, const std::string &ns_name) {
 }
 
 /* Checks if the namespace is registered in this pool */
-bool ns_pool::exists_ns(ns_type tp, const std::string &ns_name) {
+bool ns_pool::exists_ns(ns_type tp, const std::string &ns_name) const {
     const auto it = ns_type_map.find(tp);
     if (it != ns_type_map.end()) {
         const auto &tp_ns_collection = it->second;

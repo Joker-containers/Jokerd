@@ -17,23 +17,23 @@
 
 class ns_pool {
 public:
-    bool exists_ns(ns_type tp, const std::string &ns_name);
+    bool exists_ns(ns_type tp, const std::string &ns_name) const;
 
-    void register_ns(ns_type tp, const std::shared_ptr<ns>& to_register);
+    void register_ns(ns_type tp, const std::shared_ptr<ns> &to_register);
 
-    std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name);
+    std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name) const;
 
     bool delete_ns(ns_type tp, const std::string &ns_name);
 
 private:
     std::unordered_map<ns_type, std::vector<std::shared_ptr<ns>> &> ns_type_map{
-            {IPC, all_ipc_ns},
+            {IPC,     all_ipc_ns},
             {NETWORK, all_net_ns},
-            {MOUNT, all_mnt_ns},
-            {PID, all_pid_ns},
-            {TIME, all_time_ns},
-            {USER, all_user_ns},
-            {UTS, all_uts_ns}
+            {MOUNT,   all_mnt_ns},
+            {PID,     all_pid_ns},
+            {TIME,    all_time_ns},
+            {USER,    all_user_ns},
+            {UTS,     all_uts_ns}
     };
 
     // Making this members of type std::vector<std::shared_ptr<ns_type>> would be better,

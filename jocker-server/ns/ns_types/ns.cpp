@@ -28,5 +28,5 @@ ns::ns(std::string name, int fd, ns_type tp, pid_t process_pid): m_name(std::mov
 }
 
 void ns::add_pid(pid_t pid) {
-    m_processes_inside.emplace_back(pid);
+    m_processes_inside.emplace_back(pid); // TODO: use this
 }
