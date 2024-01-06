@@ -1,0 +1,3 @@
+/Users/nazar/Projects/Study/OS/Jokerd/jocker-server/build/CMakeFiles/jocker_server.dir
+/Users/nazar/Projects/Study/OS/Jokerd/jocker-server/build/CMakeFiles/edit_cache.dir
+/Users/nazar/Projects/Study/OS/Jokerd/jocker-server/build/CMakeFiles/rebuild_cache.dir

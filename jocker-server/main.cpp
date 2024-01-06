@@ -164,29 +164,53 @@
 //    return 0;
 
 #include "container.h"
+#include "iostream"
+
+//void runtime() {
+//    ns_options ns_opt = ns_options();
+//    std::string uts_ns_name = "uts_test";
+//    ns_opt.add_namespace(UTS, uts_ns_name);
+//
+//    std::string bin_path = "ls";
+//
+//    std::vector<std::string> bin_args = {};
+//
+//    std::string container_name = "FIRST CONTAINER";
+//
+//    container_options opt = container_options(ns_opt, {}, bin_args, bin_path, container_name);
+//
+//    ns_pool pool {};
+//
+//    ns_conf_repository repo = ns_conf_repository();
+//
+//    std::string uts_hostname = "TESTMACHINE";
+//    uts_ns_config conf = uts_ns_config(uts_hostname);
+//    repo.uts_ns_configs[uts_ns_name] = conf;
+//
+//    auto res = d_resources(pool, repo);
+//    container c = container(opt, res);
+//    sleep(5);
+//}
+
+void runtime() {
+    while (true) {
+//        // listening to request
+//        auto request = get_request();
+//
+//        // analyzing request
+//        auto [request_type, request_data] = analyze_request(&request);
+//
+//        // executing request
+//        execute_request(&request_type, &request_data);
+    }
+}
+
 
 int main(int argc, char *argv[]) {
-    ns_options ns_opt = ns_options();
-    std::string uts_ns_name = "uts_test";
-    ns_opt.add_namespace(UTS, uts_ns_name);
-
-    std::string bin_path = "ls";
-
-    std::vector<std::string> bin_args = {};
-
-    std::string container_name = "FIRST CONTAINER";
-
-    container_options opt = container_options(ns_opt, {}, bin_args, bin_path, container_name);
-
-    ns_pool pool {};
-
-    ns_conf_repository repo = ns_conf_repository();
-
-    std::string uts_hostname = "TESTMACHINE";
-    uts_ns_config conf = uts_ns_config(uts_hostname);
-    repo.uts_ns_configs[uts_ns_name] = conf;
-
-    auto res = d_resources(pool, repo);
-    container c = container(opt, res);
-    sleep(5);
+    try {
+        runtime();
+    } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        std::cout << "The execution was stopped due to a previous error." << std::endl;
+    }
 }
