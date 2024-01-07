@@ -48,6 +48,16 @@ void container::init_namespaces(const ns_conf_repository &opts,
                                 const std::vector<std::pair<ns_type, std::string>>&ns_to_create,
                                 d_resources &daemon_resources,
                                 pid_t pid) {
+    // Update info in namespaces, which existed already
+    const auto namespaces_to_update = _namespaces.get_namespaces();
+    for (const auto &entry: namespaces_to_update){
+        // There are nullptr entries for non-existing namespaces
+        if (entry.get()){
+            entry->add_pid(pid);
+        }
+    }
+
+    // Create handles for new namespaces
     std::shared_ptr<ns> new_ns;
     for (const auto &entry: ns_to_create) {
         int fd = get_ns_handle(entry.first, pid);
@@ -60,7 +70,7 @@ void container::init_namespaces(const ns_conf_repository &opts,
     auto &ns_collection_mask = _namespaces.get_ns_mask();
     for (size_t i = 0; i < ns_collection.size(); ++i){
         if (ns_collection_mask[i]){
-            ns_collection[i]->setup_ns(opts);
+            ns_collection[i]->external_setup_ns(opts);
         }
     }
 

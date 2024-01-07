@@ -22,11 +22,15 @@ void child_init_ns(std::vector<std::pair<ns_type, std::string>> &ns_to_create, n
     std::shared_ptr<ns> new_ns;
     std::vector<std::shared_ptr<ns>> new_namespaces;
     for (const auto &entry: ns_to_create) {
-        int fd = get_ns_handle(entry.first, pid);
+        int fd = -1; // Just mock fd instead of get_ns_handle(entry.first, pid);
         new_namespaces.emplace_back(create_namespace_entry(entry.first, entry.second, fd, pid));
     }
 
     // Setup process
+    for (const auto &ns: new_namespaces){
+        ns->internal_setup_ns(repo);
+    }
+
     for (const auto &ns: new_namespaces){
         ns->init_internal(repo);
     }
@@ -34,13 +38,15 @@ void child_init_ns(std::vector<std::pair<ns_type, std::string>> &ns_to_create, n
 
 static int child_function(void *arg){
     auto parent_info = static_cast<child_argument *>(arg);
-
+    sleep(1);
     child_init_ns(parent_info->ns_to_create, parent_info->repo);
 
     // Start the binary
     // TODO: close fds
     auto progname = strdup(parent_info->opts.bin_path.c_str());
-    auto args_ptr = createCharPtrArray(parent_info->opts.bin_arguments);
+    auto args = parent_info->opts.bin_arguments;
+    args.insert(args.cbegin(), progname);
+    auto args_ptr = createCharPtrArray(args);
     //sleep(3);
     auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
     perror("execvp");

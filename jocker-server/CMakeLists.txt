@@ -27,7 +27,8 @@ add_executable(jocker_server main.cpp
         ns/ns_options/time_ns_config.cpp
         ns/ns_options/user_ns_config.cpp
         ns/ns_options/uts_ns_config.cpp
-        parser/parser.cpp)
+        parser/parser.cpp
+        other/common.cpp)
 
 find_package(Boost 1.71.0 COMPONENTS program_options system REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
