@@ -80,7 +80,7 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
     log_file = std::fstream(log_file_path);
 
     if (!log_file.is_open()) {
-        std::cerr << "Error: Unable to open logs file." << std::endl;
+        std::cerr << "Error: Unable to open trace file." << std::endl;
         exit(1);
     }
 
@@ -135,7 +135,32 @@ void Daemon::execute_request() {
 }
 
 void Daemon::send_logs() {
+    log_message("Starting to receive container to get logs of...");
 
+    log_message("\nReceiving container name size...");
+    uint64_t container_name_size;
+    recv(client_socket, &container_name_size, sizeof(container_name_size), 0);
+    log_message("Received container name size: " + std::to_string(container_name_size));
+
+    log_message("\nReceiving container name...");
+    std::vector<char> container_name_v(container_name_size);
+    recv(client_socket, container_name_v.data(), container_name_size, 0);
+    log_message("Received container name: " + std::string(container_name_v.data()));
+
+    std::string container_name = container_name_v.data();
+    std::ifstream container(container_name);
+
+    if (!container.is_open()) {
+        log_message(std::string("Error: Unable to open logs file for container ") + container_name, true);
+        return;
+    }
+
+    std::vector<char> logsContent((std::istreambuf_iterator<char>(container)),
+                                  std::istreambuf_iterator<char>());
+
+    uint64_t logsSize = logsContent.size();
+    send(client_socket, logsContent.data(), logsSize, 0);
+    shutdown(client_socket, SHUT_WR);
 }
 
 void Daemon::send_trace() {
