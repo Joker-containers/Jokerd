@@ -255,6 +255,7 @@ std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> Daemon::get_
     recv(client_socket, binary_config.data(), binary_config_size, 0);
     log_message("Received config.");
 
+    return std::make_tuple(binary_name, binary, binary_config);
 }
 
 Daemon::~Daemon() {
