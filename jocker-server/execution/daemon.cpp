@@ -77,7 +77,7 @@
 //}
 
 Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
-    log_file = std::fstream(log_file_path, std::fstream::out | std::fstream::trunc);
+    log_file = std::fstream(log_file_path);
 
     if (!log_file.is_open()) {
         std::cerr << "Error: Unable to open trace file." << std::endl;
@@ -172,9 +172,9 @@ void Daemon::send_trace() {
 
     std::vector<char> logsContent((std::istreambuf_iterator<char>(log_file)),
                                   std::istreambuf_iterator<char>());
-
-    uint64_t logsSize = logsContent.size();
-    send_all(client_socket, logsContent.data(), logsSize, 0);
+    std::vector<char> r(10000, 'e');
+    uint64_t logsSize = r.size();
+    send_all(client_socket, r.data(), logsSize, 0);
 }
 
 void Daemon::run_container() {

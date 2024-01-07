@@ -21,7 +21,6 @@ container_options Parser::parse_options(const std::string& binary_name) {
     config.close();
 
     ns_options namespace_options;
-    cgroup_options cgroup_options_;
     std::string bin_path = binary_name;
     std::vector<std::string> bin_arguments;
     std::string container_name = binary_name;
@@ -36,7 +35,7 @@ container_options Parser::parse_options(const std::string& binary_name) {
 
     // TODO: ADD FUCKING CGROUPS PARSING, LIUBOMYR!!!
 
-    container_options cont_options(namespace_options, cgroup_options_, bin_arguments, bin_path, container_name);
+    container_options cont_options(namespace_options, bin_arguments, bin_path, container_name);
 
     return cont_options;
 }

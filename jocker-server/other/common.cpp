@@ -48,7 +48,7 @@ int write_to_file(const std::string &path, const std::string &content) {
 
 
 void recv_all(int socket, void *buffer, size_t size, int flags) {
-    ssize_t total_bytes_read;
+    ssize_t total_bytes_read = 0;
     ssize_t bytes_read;
     auto current_buf_ptr = static_cast<char *>(buffer);
 
@@ -60,12 +60,12 @@ void recv_all(int socket, void *buffer, size_t size, int flags) {
 }
 
 void send_all(int socket, void *buffer, size_t size, int flags) {
-    ssize_t total_bytes_send;
+    ssize_t total_bytes_send = 0;
     ssize_t bytes_send;
     auto current_buf_ptr = static_cast<char *>(buffer);
 
     while (size > 0) {
-        bytes_send = syscall_wrapper(send, "send", socket, current_buf_ptr + total_bytes_send, size, flags);
+        bytes_send = send(socket, current_buf_ptr + total_bytes_send, size, flags);
         total_bytes_send += bytes_send;
         size -= bytes_send;
     }
