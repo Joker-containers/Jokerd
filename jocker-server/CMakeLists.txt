@@ -11,7 +11,7 @@ add_executable(jocker_server main.cpp
         ns/ns_types/ns.cpp
         ns/ns_options/ns_options.cpp
         container/container_options.cpp
-        cgroup/cgroup_options.cpp
+        cgroup/cgroup_manager.cpp
         ns/ns_types/ipc_ns.cpp
         ns/ns_types/net_ns.cpp
         ns/ns_types/mnt_ns.cpp
