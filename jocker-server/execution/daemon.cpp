@@ -4,12 +4,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <utility>
 #include <vector>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/socket.h>
-#include <mutex>
 #include <tuple>
 #include "daemon.h"
 #include "parser.h"

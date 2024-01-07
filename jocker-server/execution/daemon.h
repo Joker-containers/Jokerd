@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <cstdint>
 #include <vector>
+#include <fstream>
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
 
