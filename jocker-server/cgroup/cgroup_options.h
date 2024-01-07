@@ -1,8 +1,9 @@
 #ifndef JOCKER_SERVER_CGROUP_OPTIONS_H
 #define JOCKER_SERVER_CGROUP_OPTIONS_H
-
+#include <string>
 
 class cgroup_options {
+public:
     std::string read_bps;
     std::string write_bps;
     std::string cfs_quota;
