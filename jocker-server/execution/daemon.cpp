@@ -178,11 +178,12 @@ void Daemon::run_container() {
     // Parsing config file
     
     Parser parser(config_filename);
-    auto options = parser.parse_options();
+    auto options = parser.parse_options(binary_name);
 
-    // ======================================================================
+    // ======================================================================\
+    // TODO: ADD FUCKING CONTAINER CREATION. THE FUCK YOU'RE LOOKING AT???
     // Creating a container
-    // ......
+    // ...
 }
 
 void Daemon::log_message(const std::string& message, bool to_cerr) {

@@ -17,13 +17,13 @@ public:
     container_options(ns_options other_opts, cgroup_options cgroup_opts,
                       std::vector<std::string> bin_arguments, std::string bin_path,
                       std::string container_name) : namespace_options(std::move(other_opts)),
-                                                    _cgroup_options(cgroup_opts),
+                                                    cgroup_options(cgroup_opts),
                                                     bin_path(std::move(bin_path)),
                                                     bin_arguments(std::move(bin_arguments)),
                                                     container_name(std::move(container_name)) {}
 
     ns_options namespace_options;
-    cgroup_options _cgroup_options;
+    cgroup_options cgroup_options;
     std::string bin_path;
     std::vector<std::string> bin_arguments;
     std::string container_name;
