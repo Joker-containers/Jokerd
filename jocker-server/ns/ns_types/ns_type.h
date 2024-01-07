@@ -17,7 +17,7 @@ enum ns_type{
     NS_TYPES_NUM
 };
 
-std::map<int, std::string> ns_type_strings {
+inline std::map<int, std::string> ns_type_strings {
         {IPC, "ipc_ns_name"},
         {NETWORK, "network_ns_name"},
         {MOUNT, "mount_ns_name"},
