@@ -3,7 +3,14 @@
 
 
 class cgroup_options {
-
+    std::string read_bps;
+    std::string write_bps;
+    std::string cfs_quota;
+    std::string cfs_period;
+    std::string memory_high; // try to limit mem usage
+    std::string memory_max; // kill process if over
+    std::string swap_max; // rest will not be swapped
+    std::string pids_max;
 };
 
 
