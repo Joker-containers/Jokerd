@@ -167,19 +167,24 @@
 
 int main(int argc, char *argv[]) {
     ns_options ns_opt = ns_options();
+
     std::string uts_ns_name = "uts_test";
     std::string user_ns_name = "user_test";
     std::string mnt_ns_name = "mnt_test";
     std::string pid_ns_name = "pid_test";
+    std::string ipc_ns_name = "ipc_test";
+    std::string net_ns_name = "net_test";
 
     ns_opt.add_namespace(UTS, uts_ns_name);
     ns_opt.add_namespace(USER, user_ns_name);
     ns_opt.add_namespace(MOUNT, mnt_ns_name);
     ns_opt.add_namespace(PID, pid_ns_name);
+    ns_opt.add_namespace(IPC, ipc_ns_name);
+    ns_opt.add_namespace(NETWORK, net_ns_name);
 
-    std::string bin_path = "ps";
+    std::string bin_path = "ip";
 
-    std::vector<std::string> bin_args = {"aux"};
+    std::vector<std::string> bin_args = {"link", "list"};
 
     std::string container_name = "FIRST CONTAINER";
 
@@ -195,11 +200,15 @@ int main(int argc, char *argv[]) {
     user_ns_config user_conf = {};
     mnt_ns_config mnt_conf = {.new_rootfs_path = "./data/alpine_rootfs"};
     pid_ns_config pid_conf;
+    ipc_ns_config ipc_conf;
+    net_ns_config net_conf;
 
     repo.uts_ns_configs[uts_ns_name] = uts_conf;
     repo.user_ns_configs[user_ns_name] = user_conf;
     repo.mnt_ns_configs[mnt_ns_name] = mnt_conf;
     repo.pid_ns_configs[pid_ns_name] = pid_conf;
+    repo.ipc_ns_configs[ipc_ns_name] = ipc_conf;
+    repo.net_ns_configs[net_ns_name] = net_conf;
 
     auto res = d_resources(pool, repo);
     container c = container(opt, res);

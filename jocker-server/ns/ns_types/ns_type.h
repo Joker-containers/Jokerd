@@ -44,7 +44,7 @@ const std::unordered_map<ns_type, std::string> NS_SHORTCUT = {
         {PID, "pid"},
         {IPC, "ipc"},
         {NETWORK, "net"},
-        {TIME, "time"},
+        {TIME, "time_for_children"}, // TODO
         {UTS, "uts"}
 };
 
