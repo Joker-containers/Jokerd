@@ -17,7 +17,9 @@ std::unique_ptr<char *[], void (*)(char **)> createCharPtrArray(const std::vecto
 
 int write_to_file(const std::string &path, const std::string &content);
 
-void recv_all(int socket, char *buffer, size_t size);
+void recv_all(int socket, void *buffer, size_t size, int flags);
+
+void send_all(int socket, void *buffer, size_t size, int flags);
 
 
 #endif //JOCKER_SERVER_COMMON_H

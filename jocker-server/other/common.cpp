@@ -47,37 +47,26 @@ int write_to_file(const std::string &path, const std::string &content) {
 }
 
 
-void recv_all(int socket, char *buffer, size_t size) {
-    ssize_t bytesRead;
+void recv_all(int socket, void *buffer, size_t size, int flags) {
+    ssize_t total_bytes_read;
+    ssize_t bytes_read;
+    auto current_buf_ptr = static_cast<char *>(buffer);
 
     while (size > 0) {
-        bytesRead = recv(socket, buffer, BUFFER_SIZE, 0);
-        if (bytesRead == -1) {
-            perror("Error in recv");
-        }
-        size -= bytesRead;
-    }
-
-    if (bytesRead == 0) {
-        std::cout << "Connection closed by the peer." << std::endl;
-    } else if (bytesRead == -1) {
-        perror("Error in recv");
+        bytes_read = syscall_wrapper(recv, "recv", socket, current_buf_ptr + total_bytes_read, size, flags);
+        total_bytes_read += bytes_read;
+        size -= bytes_read;
     }
 }
 
-void send_all(int socket, const char *buffer, size_t size) {
-    ssize_t bytesSent;
+void send_all(int socket, void *buffer, size_t size, int flags) {
+    ssize_t total_bytes_send;
+    ssize_t bytes_send;
+    auto current_buf_ptr = static_cast<char *>(buffer);
 
     while (size > 0) {
-        bytesSent = send(socket, buffer, BUFFER_SIZE, 0);
-        if (bytesSent == -1) {
-            perror("Error in send");
-        }
-        size -= bytesSent;
-        buffer += bytesSent;
-    }
-
-    if (bytesSent == -1) {
-        perror("Error in send");
+        bytes_send = syscall_wrapper(send, "send", socket, current_buf_ptr + total_bytes_send, size, flags);
+        total_bytes_send += bytes_send;
+        size -= bytes_send;
     }
 }

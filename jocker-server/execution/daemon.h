@@ -12,13 +12,15 @@
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
 
+constexpr int INVALID_FD = -1;
+
 class Daemon {
 public:
     Daemon(uint16_t port, const std::string& log_file_path);
 
     virtual ~Daemon();
 
-    void process_request();
+    void get_request_type();
 
     void execute_request();
 

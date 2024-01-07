@@ -28,14 +28,14 @@
 
 void runtime(Daemon &daemon) {
     while (true) {
-        daemon.process_request();
+        daemon.get_request_type();
         daemon.execute_request();
     }
 }
 
 
 int main(int argc, char *argv[]) {
-    Daemon daemon(10109, "./DAEMON.log");
+    Daemon daemon(10110, "./DAEMON.log");
     try {
         runtime(daemon);
     } catch (std::exception& e) {

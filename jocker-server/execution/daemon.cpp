@@ -9,8 +9,10 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <tuple>
+#include <netinet/tcp.h>
 #include "daemon.h"
 #include "parser.h"
+#include "common.h"
 
 
 //void get_file_and_config(int client_socket) {
@@ -24,34 +26,34 @@
 //
 //    log_message("\nReceiving binary filename size...");
 //    uint64_t binary_name_size;
-//    recv(client_socket, &binary_name_size, sizeof(binary_name_size), 0);
+//    recv_all(client_socket, &binary_name_size, sizeof(binary_name_size), 0);
 //    log_message("Received binary filename length: " + std::to_string(binary_name_size));
 //
 //    log_message("\nReceiving binary filename...");
 //    std::vector<char> binary_name(binary_name_size);
-//    recv(client_socket, binary_name.data(), binary_name_size, 0);
+//    recv_all(client_socket, binary_name.data(), binary_name_size, 0);
 //    log_message("Received binary filename: " + std::string(binary_name.data()));
 //
 //    log_message("\nReceiving binary size...");
 //    uint64_t binary_size;
-//    recv(client_socket, &binary_size, sizeof(binary_size), 0);
+//    recv_all(client_socket, &binary_size, sizeof(binary_size), 0);
 //    log_message("Received binary size: " + std::to_string(binary_size));
 //
 //    log_message("\nReceiving binary...");
 //    std::vector<char> binary(binary_size);
-//    recv(client_socket, binary.data(), binary_size, 0);
+//    recv_all(client_socket, binary.data(), binary_size, 0);
 //    log_message("Received binary.");
 //
 //    std::string config_filename = std::string(binary_name.data()) + ".joker";
 //    log_message("\nConfig filename is: " + config_filename);
 //    log_message("Receiving config size...");
 //    uint64_t binary_config_size;
-//    recv(client_socket, &binary_config_size, sizeof(binary_config_size), 0);
+//    recv_all(client_socket, &binary_config_size, sizeof(binary_config_size), 0);
 //    log_message("Received config size: " + std::to_string(binary_config_size));
 //
 //    log_message("\nReceiving config...");
 //    std::vector<char> binary_config(binary_config_size);
-//    recv(client_socket, binary_config.data(), binary_config_size, 0);
+//    recv_all(client_socket, binary_config.data(), binary_config_size, 0);
 //    log_message("Received config.");
 //
 //    std::ifstream check_file(binary_name.data());
@@ -75,7 +77,7 @@
 //}
 
 Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
-    log_file = std::fstream(log_file_path);
+    log_file = std::fstream(log_file_path, std::fstream::out | std::fstream::trunc);
 
     if (!log_file.is_open()) {
         std::cerr << "Error: Unable to open trace file." << std::endl;
@@ -83,7 +85,7 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
     }
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == -1) {
+    if (server_socket == INVALID_FD) {
         log_message("Error: Unable to create socket.", true);
         exit(1);
     }
@@ -114,10 +116,16 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
         log_message("Error: Unable to accept client connection.", true);
         exit(-1);
     }
+
+    int flag = 1;
+    if (setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int)) == -1) {
+        log_message("Error: failed to set TCP_NODELAY option");
+        throw std::runtime_error("Fail in socket setup!");
+    }
 }
 
-void Daemon::process_request() {
-    recv(client_socket, &current_request, sizeof(current_request), 0);
+void Daemon::get_request_type() {
+    recv_all(client_socket, &current_request, sizeof(current_request), 0);
 }
 
 void Daemon::execute_request() {
@@ -137,12 +145,12 @@ void Daemon::send_logs() {
 
     log_message("\nReceiving container name size...");
     uint64_t container_name_size;
-    recv(client_socket, &container_name_size, sizeof(container_name_size), 0);
+    recv_all(client_socket, &container_name_size, sizeof(container_name_size), 0);
     log_message("Received container name size: " + std::to_string(container_name_size));
 
     log_message("\nReceiving container name...");
     std::vector<char> container_name_v(container_name_size);
-    recv(client_socket, container_name_v.data(), container_name_size, 0);
+    recv_all(client_socket, container_name_v.data(), container_name_size, 0);
     log_message("Received container name: " + std::string(container_name_v.data()));
 
     std::string container_name = container_name_v.data();
@@ -157,8 +165,7 @@ void Daemon::send_logs() {
                                   std::istreambuf_iterator<char>());
 
     uint64_t logsSize = logsContent.size();
-    send(client_socket, logsContent.data(), logsSize, 0);
-    shutdown(client_socket, SHUT_WR);
+    send_all(client_socket, logsContent.data(), logsSize, 0);
 }
 
 void Daemon::send_trace() {
@@ -167,8 +174,7 @@ void Daemon::send_trace() {
                                   std::istreambuf_iterator<char>());
 
     uint64_t logsSize = logsContent.size();
-    send(client_socket, logsContent.data(), logsSize, 0);
-    shutdown(client_socket, SHUT_WR);
+    send_all(client_socket, logsContent.data(), logsSize, 0);
 }
 
 void Daemon::run_container() {
@@ -225,40 +231,50 @@ std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> Daemon::get_
 
     log_message("\nReceiving binary filename size...");
     uint64_t binary_name_size;
-    recv(client_socket, &binary_name_size, sizeof(binary_name_size), 0);
+    recv_all(client_socket, &binary_name_size, sizeof(binary_name_size), 0);
     log_message("Received binary filename length: " + std::to_string(binary_name_size));
 
     log_message("\nReceiving binary filename...");
     std::vector<char> binary_name(binary_name_size);
-    recv(client_socket, binary_name.data(), binary_name_size, 0);
+    recv_all(client_socket, binary_name.data(), binary_name_size, 0);
     log_message("Received binary filename: " + std::string(binary_name.data()));
 
     log_message("\nReceiving binary size...");
     uint64_t binary_size;
-    recv(client_socket, &binary_size, sizeof(binary_size), 0);
+    recv_all(client_socket, &binary_size, sizeof(binary_size), 0);
     log_message("Received binary size: " + std::to_string(binary_size));
 
     log_message("\nReceiving binary...");
     std::vector<char> binary(binary_size);
-    recv(client_socket, binary.data(), binary_size, 0);
+    recv_all(client_socket, binary.data(), binary_size, 0);
     log_message("Received binary.");
 
     std::string config_filename = std::string(binary_name.data()) + ".joker";
     log_message("\nConfig filename is: " + config_filename);
+
     log_message("Receiving config size...");
     uint64_t binary_config_size;
-    recv(client_socket, &binary_config_size, sizeof(binary_config_size), 0);
+    recv_all(client_socket, &binary_config_size, sizeof(binary_config_size), 0);
     log_message("Received config size: " + std::to_string(binary_config_size));
 
     log_message("\nReceiving config...");
     std::vector<char> binary_config(binary_config_size);
-    recv(client_socket, binary_config.data(), binary_config_size, 0);
+    recv_all(client_socket, binary_config.data(), binary_config_size, 0);
     log_message("Received config.");
 
     return std::make_tuple(binary_name, binary, binary_config);
 }
 
 Daemon::~Daemon() {
+    if (client_socket != INVALID_FD) {
+        close(client_socket);
+        // log_message("Closed client socket.");
+    }
+
+    if (server_socket != INVALID_FD) {
+        close(server_socket);
+        // log_message("Closed server socket.");
+    }
     log_file.close();
 }
 
