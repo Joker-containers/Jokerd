@@ -8,11 +8,7 @@ void uts_ns::configure_ns(const ns_conf_repository &opts) {
 
 }
 
-void uts_ns::setup_ns(const ns_conf_repository &opts) {
-
-}
-
-void uts_ns::init_internal(const ns_conf_repository &opts) {
+void uts_ns::internal_setup_ns(const ns_conf_repository &opts) {
     const auto &conf = opts.uts_ns_configs.at(m_name);
 
     struct utsname uts{};
@@ -24,4 +20,8 @@ void uts_ns::init_internal(const ns_conf_repository &opts) {
     syscall_wrapper(uname, "uname", &uts);
 
     std::cout << "Child host machine name: " << uts.nodename << std::endl;
+}
+
+void uts_ns::init_internal(const ns_conf_repository &opts) {
+
 }

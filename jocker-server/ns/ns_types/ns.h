@@ -4,6 +4,7 @@
 #include "syscall_wrapper.h"
 #include "ns_options/ns_options.h"
 #include "ns_options/ns_conf_repository.h"
+#include "common.h"
 #include <string>
 #include <unistd.h>
 #include <utility>
@@ -12,7 +13,7 @@ typedef int fd_t;
 
 class ns {
 public:
-    [[nodiscard]] const std::string &get_name(){
+    [[nodiscard]] const std::string &get_name() const{
         return m_name;
     }
     [[nodiscard]] fd_t get_fd() const{
@@ -25,7 +26,9 @@ public:
 
     void add_pid(pid_t pid);
 
-    virtual void setup_ns(const ns_conf_repository &opts) = 0;
+    virtual void external_setup_ns(const ns_conf_repository &opts);
+
+    virtual void internal_setup_ns(const ns_conf_repository &opts);
 
     virtual void configure_ns(const ns_conf_repository &opts) = 0;
 
@@ -35,12 +38,18 @@ public:
 
     ~ns();
 
+    std::string m_name;
 protected:
     ns_type m_tp;
-    std::string m_name;
     fd_t m_fd;
-    std::vector<pid_t> m_processes_inside;
+    std::vector<pid_t> m_processes_inside = {}; // TODO
 };
+
+std::shared_ptr<ns> create_namespace_entry(ns_type tp, const std::string &ns_name, int fd, pid_t pid);
+
+std::string get_ns_handle_path(ns_type tp, pid_t pid);
+
+int get_ns_handle(ns_type tp, pid_t pid);
 
 
 #endif //JOCKER_SERVER_NS_H
