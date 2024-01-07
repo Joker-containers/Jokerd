@@ -4,60 +4,72 @@
 
 #include <fstream>
 #include <iostream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include "parser.h"
 
 Parser::Parser(const std::string &file_name) : file_name(file_name) {}
 
-container_options Parser::parse_options() {
-    // trying to open a file
-    std::ifstream file(file_name);
+container_options Parser::parse_options(const std::string& binary_name) {
+    std::ifstream config(file_name);
 
-    if (!file) {
-        file.close();
-        throw std::ios_base::failure("Error opening file");
+    if(!config.is_open()) {
+        throw std::ifstream::failure("Unable to open config file: " + file_name);
     }
 
-    // reading contents to a string to use it later
+    auto [namespace_map, cgroup_map, debug_map] = parse_ini(config);
+
+    config.close();
+
+    ns_options namespace_options;
+    cgroup_options cgroup_options_;
+    std::string bin_path = binary_name;
+    std::vector<std::string> bin_arguments;
+    std::string container_name = binary_name;
+
+    for (size_t i = 0; i != NS_TYPES_NUM; i++) {
+        if (namespace_map.contains(ns_type_strings[(int)i])) {
+            namespace_options._ns_collection[i] = namespace_map[ns_type_strings[(int)i]];
+            namespace_options._entry_valid[i] = true;
+        }
+        namespace_options._entry_valid[i] = false;
+    }
+
+    // TODO: ADD FUCKING CGROUPS PARSING, LIUBOMYR!!!
+
+    container_options cont_options(namespace_options, cgroup_options_, bin_arguments, bin_path, container_name);
+
+    return cont_options;
+}
+
+std::tuple<std::unordered_map<std::string, std::string>,
+        std::unordered_map<std::string, std::string>,
+        std::unordered_map<std::string, std::string>> Parser::parse_ini(const std::ifstream& file) {
     std::stringstream ss;
     ss << file.rdbuf();
 
-    auto options = parse_json(ss);
-
-    file.close(); // success case
-    return options;
-}
-
-container_options Parser::parse_json(std::stringstream &ss) {
     boost::property_tree::ptree pt;
-    boost::property_tree::read_json(ss, pt);
-
-    // NAMESPACE OPTIONS
-    boost::property_tree::ptree ns_options_tree = pt.get_child("namespace_options");
-
-    boost::property_tree::ptree m_ns_collection_tree = ns_options_tree.get_child("m_ns_collection");
-    std::vector<std::string> m_ns_collection;
-    for (const auto& ns : m_ns_collection_tree) {
-        m_ns_collection.push_back(ns.second.get_value<std::string>());
+    try {
+        boost::property_tree::read_ini(ss, pt);
+    } catch (const boost::property_tree::ini_parser_error& e) {
+        throw std::runtime_error("Error parsing INI file");
     }
 
-    ns_options namespace_options(m_ns_collection);
+    std::unordered_map<std::string, std::string> namespace_map, cgroup_map, debug_map;
 
-    // CGROUP OPTIONS
+    for (const auto& section : pt) {
+        for (const auto& entry : section.second) {
+            std::string key = entry.first;
+            auto value = entry.second.get_value<std::string>();
 
-    boost::property_tree::ptree cgroup_options_tree = pt.get_child("cgroup_options_m");
-
-
-    // BIN ARGS
-    boost::property_tree::ptree bin_arguments_tree = pt.get_child("bin_arguments");
-    std::vector<std::string> bin_arguments;
-    for (const auto& argument : bin_arguments_tree) {
-        bin_arguments.push_back(argument.second.get_value<std::string>());
+            if (section.first == "Namespaces") {
+                namespace_map[key] = value;
+            } else if (section.first == "Cgroup Settings") {
+                cgroup_map[key] = value;
+            } else if (section.first == "Debug Settings") {
+                debug_map[key] = value;
+            }
+        }
     }
 
-    // CONTAINER NAME
-    auto container_name = pt.get<std::string>("container_name");
-
-    return container_options{namespace_options, {}, bin_arguments, container_name, ""};
+    return std::make_tuple(namespace_map, cgroup_map, debug_map);
 }

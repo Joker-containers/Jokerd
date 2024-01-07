@@ -9,9 +9,11 @@
 
 class Parser {
 public:
-    explicit Parser(const std::string &file);
-    container_options parse_options();
-    container_options parse_json(std::stringstream& ss);
+    explicit Parser(const std::string &file_name);
+    container_options parse_options(const std::string& binary_name);
+    std::tuple<std::unordered_map<std::string, std::string>,
+            std::unordered_map<std::string, std::string>,
+            std::unordered_map<std::string, std::string>> parse_ini(const std::ifstream& file);
 
 private:
     const std::string& file_name;

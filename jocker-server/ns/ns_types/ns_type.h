@@ -18,14 +18,14 @@ enum ns_type{
     NS_TYPES_NUM
 };
 
-const std::map<std::string, int> ns_type_strings {
-        {"USER", USER},
-        {"MOUNT", MOUNT},
-        {"PID", PID},
-        {"IPC", IPC},
-        {"NETWORK", NETWORK},
-        {"TIME", TIME},
-        {"UTS", UTS},
+inline std::map<int, std::string> ns_type_strings {
+        {IPC, "ipc_ns_name"},
+        {NETWORK, "network_ns_name"},
+        {MOUNT, "mount_ns_name"},
+        {PID, "pid_ns_name"},
+        {TIME, "time_ns_name"},
+        {USER, "user_ns_name"},
+        {UTS, "uts_ns_name"},
 };
 
 const std::unordered_map<ns_type, int> NS_CLONE_FLAG = {

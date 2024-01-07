@@ -46,7 +46,7 @@ public:
 
     void add_namespace(ns_type tp, std::string &ns_name);
 
-private:
+public:
     std::vector<std::string> _ns_collection;
     std::vector<bool> _entry_valid;
 };
