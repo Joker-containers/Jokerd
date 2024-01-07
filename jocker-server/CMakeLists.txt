@@ -29,9 +29,7 @@ add_executable(jocker_server main.cpp
         ns/ns_options/uts_ns_config.cpp
         parser/parser.cpp
         execution/daemon.cpp
-        execution/daemon.h
-        execution/Config.cpp
-        execution/Config.h)
+        execution/daemon.h)
 
 find_package(Boost 1.71.0 COMPONENTS program_options system REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
