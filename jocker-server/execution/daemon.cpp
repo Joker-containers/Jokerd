@@ -76,14 +76,20 @@
 //    log_message("Saved config file to " + config_filename + ".\n");
 //}
 
-Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
-    log_file = std::fstream(log_file_path);
-
-    if (!log_file.is_open()) {
-        std::cerr << "Error: Unable to open trace file." << std::endl;
-        exit(1);
+void Daemon::check_if_logs_opened() {
+    if (!log_file_writer.is_open()) {
+        std::stringstream err_message;
+        err_message << "Error: Unable to open trace file for writing." << std::endl;
+        throw std::runtime_error(err_message.str());
     }
+    if (!log_file_reader.is_open()) {
+        std::stringstream err_message;
+        err_message << "Error: Unable to open trace file for reading." << std::endl;
+        throw std::runtime_error(err_message.str());
+    }
+}
 
+void Daemon::setup_sockets() {
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == INVALID_FD) {
         log_message("Error: Unable to create socket.", true);
@@ -121,6 +127,13 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
 
     // Disable Nagle algorithm
     syscall_wrapper(setsockopt, "setsockopt", client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int));
+}
+
+Daemon::Daemon(uint16_t port, const std::string& log_file_path):
+log_file_writer(log_file_path), log_file_reader(log_file_path), port(port)
+{
+    check_if_logs_opened();
+    setup_sockets();
 }
 
 void Daemon::get_request_type() {
@@ -170,7 +183,7 @@ void Daemon::send_logs() {
 
 void Daemon::send_trace() {
 
-    std::vector<char> logsContent((std::istreambuf_iterator<char>(log_file)),
+    std::vector<char> logsContent((std::istreambuf_iterator<char>(log_file_reader)),
                                   std::istreambuf_iterator<char>());
     uint64_t logsSize = logsContent.size();
     send_all(client_socket, &logsSize, sizeof(logsSize), 0);
@@ -223,7 +236,7 @@ void Daemon::log_message(const std::string& message, bool to_cerr) {
         std::cout << message << std::endl;
     }
 
-    log_file << message << std::endl;
+    log_file_writer << message << std::endl;
 }
 
 std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> Daemon::get_run_data() {
@@ -275,6 +288,8 @@ Daemon::~Daemon() {
         close(server_socket);
         // log_message("Closed server socket.");
     }
-    log_file.close();
+    log_file_reader.close();
+    log_file_writer.close();
 }
+
 

@@ -16,9 +16,13 @@ constexpr int INVALID_FD = -1;
 
 class Daemon {
 public:
-    Daemon(uint16_t port, const std::string& log_file_path);
+    Daemon(uint16_t port, const std::string &log_file_path);
 
     virtual ~Daemon();
+
+    void check_if_logs_opened();
+
+    void setup_sockets();
 
     void get_request_type();
 
@@ -36,7 +40,8 @@ public:
 
 private:
     uint16_t port;
-    std::fstream log_file;
+    std::ofstream log_file_writer;
+    std::ifstream log_file_reader;
     uint8_t current_request;
     int client_socket;
     int server_socket;
