@@ -23,16 +23,6 @@ std::unique_ptr<char *[], void (*)(char **)> createCharPtrArray(const std::vecto
     return ptr;
 }
 
-struct raii_fd {
-    int fd;
-
-    explicit raii_fd(int fd) : fd(fd) {};
-
-    ~raii_fd() {
-        syscall_wrapper(close, "close", fd);
-    }
-};
-
 int write_to_file(const std::string &path, const std::string &content) {
     raii_fd fd = raii_fd(syscall_wrapper(open, "open", path.c_str(), O_RDWR));
     off_t content_ptr = 0;
