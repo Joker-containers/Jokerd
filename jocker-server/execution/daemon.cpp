@@ -173,6 +173,7 @@ void Daemon::send_trace() {
     std::vector<char> logsContent((std::istreambuf_iterator<char>(log_file)),
                                   std::istreambuf_iterator<char>());
     uint64_t logsSize = logsContent.size();
+    send_all(client_socket, &logsSize, sizeof(logsSize), 0);
     send_all(client_socket, logsContent.data(), logsSize, 0);
 }
 
