@@ -14,6 +14,12 @@
 
 constexpr int INVALID_FD = -1;
 
+class binary_exists_error: public std::runtime_error {
+public:
+    using runtime_error::runtime_error;
+};
+
+
 class Daemon {
 public:
     Daemon(uint16_t port, const std::string &log_file_path);
@@ -34,6 +40,8 @@ public:
 
     void run_container();
 
+    std::pair<std::string, std::string> prepare_container_resources();
+
     void log_message(const std::string& message, bool to_cerr = false);
 
     std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> get_run_data();
@@ -43,7 +51,7 @@ private:
     std::ofstream log_file_writer;
     std::ifstream log_file_reader;
     uint8_t current_request;
-    int client_socket;
+    int client_socket; // TODO: change to raii fd
     int server_socket;
     sockaddr_in server_addr;
     sockaddr_in client_addr;

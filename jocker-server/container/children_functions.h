@@ -36,6 +36,11 @@ void child_init_ns(std::vector<std::pair<ns_type, std::string>> &ns_to_create, n
     }
 }
 
+void redirect_to_logs(int fd){
+    syscall_wrapper(dup2, "dup2", fd, STDOUT_FILENO);
+    syscall_wrapper(dup2, "dup2", fd, STDERR_FILENO);
+}
+
 static int child_function(void *arg){
     auto parent_info = static_cast<child_argument *>(arg);
     sleep(1);
@@ -48,6 +53,7 @@ static int child_function(void *arg){
     args.insert(args.cbegin(), progname);
     auto args_ptr = createCharPtrArray(args);
     //sleep(3);
+    redirect_to_logs(parent_info->opts.output_fd.fd);
     auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
     perror("execvp");
     return 0;
