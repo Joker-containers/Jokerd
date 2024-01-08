@@ -6,6 +6,7 @@
 #include "container_options.h"
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
+#include "cgroup_manager.h"
 #include <string>
 #include <sys/utsname.h>
 #include <err.h>
@@ -17,7 +18,7 @@
 struct d_resources{
     ns_pool& d_ns_pool;
     ns_conf_repository& conf_repo;
-    // Cgroup pool to be added?
+    cgroup_manager& cgr_manager;
 };
 
 extern const std::unordered_map<ns_type, int> NS_CLONE_FLAG;

@@ -92,7 +92,13 @@ container::container(container_options opts, d_resources &daemon_resources): _cn
                                            opts.namespace_options.get_ns_mask(),
                                            daemon_resources.d_ns_pool, new_ns_flags);
 
+    // Create cgroup and set limitations
+    daemon_resources.cgr_manager.init_cgroup(_cgroup);
+
     pid_t pid = perform_clone(new_ns_flags, opts, ns_to_create, daemon_resources.conf_repo);
+
+    // Add container process to cgroup
+    daemon_resources.cgr_manager.add_child(_cgroup, pid);
 
     // New namespaces are created now; we should initialize them.
     init_namespaces(daemon_resources.conf_repo, ns_to_create, daemon_resources, pid);
