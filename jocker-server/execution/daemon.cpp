@@ -118,10 +118,9 @@ Daemon::Daemon(uint16_t port, const std::string& log_file_path) {
     }
 
     int flag = 1;
-    if (setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int)) == -1) {
-        log_message("Error: failed to set TCP_NODELAY option");
-        throw std::runtime_error("Fail in socket setup!");
-    }
+
+    // Disable Nagle algorithm
+    syscall_wrapper(setsockopt, "setsockopt", client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int));
 }
 
 void Daemon::get_request_type() {
@@ -165,6 +164,7 @@ void Daemon::send_logs() {
                                   std::istreambuf_iterator<char>());
 
     uint64_t logsSize = logsContent.size();
+    send_all(client_socket, &logsSize, sizeof(logsSize), 0);
     send_all(client_socket, logsContent.data(), logsSize, 0);
 }
 
@@ -172,9 +172,8 @@ void Daemon::send_trace() {
 
     std::vector<char> logsContent((std::istreambuf_iterator<char>(log_file)),
                                   std::istreambuf_iterator<char>());
-    std::vector<char> r(10000, 'e');
-    uint64_t logsSize = r.size();
-    send_all(client_socket, r.data(), logsSize, 0);
+    uint64_t logsSize = logsContent.size();
+    send_all(client_socket, logsContent.data(), logsSize, 0);
 }
 
 void Daemon::run_container() {
