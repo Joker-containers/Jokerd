@@ -30,6 +30,15 @@ const std::string NAMESPACE_TYPE = "Namespace type";
 const std::string NAMESPACE_NAME = "Namespace name";
 const std::string TEMPLATE_ID = "Template id";
 
+struct container_parsed_opts {
+    explicit container_parsed_opts(std::ifstream &file);
+
+    std::string bin_path = "ip";
+    std::vector<std::string> bin_args = {"link", "list"};
+    std::string container_name = "FIRST CONTAINER";
+    ns_options ns_opt = ns_options();
+};
+
 class Daemon {
 public:
     Daemon(uint16_t port, const std::string &log_file_path);
@@ -57,6 +66,8 @@ public:
     void parse_namespace(std::ifstream &file);
 
     void parse_cgroup(std::ifstream &file);
+
+    static container_parsed_opts parse_container_config(std::ifstream &file);
 
     std::pair<std::string, std::string> prepare_container_resources();
 

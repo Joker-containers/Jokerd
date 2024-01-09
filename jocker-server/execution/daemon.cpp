@@ -212,47 +212,10 @@ void Daemon::run_container() {
 
     // ======================================================================
     // Parsing config file
+    std::ifstream file(config_filename);
+    auto opts = parse_container_config(file);
 
-    Parser parser(config_filename);
-//    auto options = parser.parse_options(binary_name);
-
-    std::string uts_ns_name = "uts_test";
-    std::string user_ns_name = "user_test";
-    std::string mnt_ns_name = "mnt_test";
-    std::string pid_ns_name = "pid_test";
-    std::string ipc_ns_name = "ipc_test";
-    std::string net_ns_name = "net_test";
-
-    std::string uts_hostname = "TESTMACHINE";
-    uts_ns_config uts_conf = uts_ns_config(uts_hostname);
-    user_ns_config user_conf = {};
-    mnt_ns_config mnt_conf = {.new_rootfs_path = "./data/alpine_rootfs"};
-    pid_ns_config pid_conf;
-    ipc_ns_config ipc_conf;
-    net_ns_config net_conf;
-
-    repo.uts_ns_configs[uts_ns_name] = uts_conf;
-    repo.user_ns_configs[user_ns_name] = user_conf;
-    repo.mnt_ns_configs[mnt_ns_name] = mnt_conf;
-    repo.pid_ns_configs[pid_ns_name] = pid_conf;
-    repo.ipc_ns_configs[ipc_ns_name] = ipc_conf;
-    repo.net_ns_configs[net_ns_name] = net_conf;
-
-    ns_options ns_opt = ns_options();
-
-    ns_opt.add_namespace(UTS, uts_ns_name);
-    ns_opt.add_namespace(USER, user_ns_name);
-    ns_opt.add_namespace(MOUNT, mnt_ns_name);
-    ns_opt.add_namespace(PID, pid_ns_name);
-    ns_opt.add_namespace(IPC, ipc_ns_name);
-    ns_opt.add_namespace(NETWORK, net_ns_name);
-
-    std::string bin_path = "ip";
-
-    std::vector<std::string> bin_args = {"link", "list"};
-
-    std::string container_name = "FIRST CONTAINER";
-
+    std::string container_name;
     int logs_fd = syscall_wrapper(open, "open", container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
 
 
@@ -269,8 +232,9 @@ void Daemon::run_container() {
      * launch container
     */
 
-    auto container_namespaces = pool.get_ns_group(ns_opt);
-    container_options opt = container_options(container_namespaces, bin_args, bin_path, container_name, logs_fd);
+    
+    auto container_namespaces = pool.get_ns_group(opts.ns_opt);
+    container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, logs_fd);
     container c = container(opt);
     sleep(5);
 }
@@ -450,6 +414,10 @@ void Daemon::parse_config(const std::string &file) {
     input_file.close();
 }
 
+container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
+    return container_parsed_opts(file);
+}
+
 
 /**
 * Container options parser
@@ -462,3 +430,21 @@ void Daemon::parse_config(const std::string &file) {
  * return ns options
  *
 */
+container_parsed_opts::container_parsed_opts(std::ifstream &file) {
+    // Constructor just for a mock object
+
+    std::string uts_ns_name = "uts_test";
+    std::string user_ns_name = "user_test";
+    std::string mnt_ns_name = "mnt_test";
+    std::string pid_ns_name = "pid_test";
+    std::string ipc_ns_name = "ipc_test";
+    std::string net_ns_name = "net_test";
+
+    ns_opt.add_namespace(UTS, uts_ns_name);
+    ns_opt.add_namespace(USER, user_ns_name);
+    ns_opt.add_namespace(MOUNT, mnt_ns_name);
+    ns_opt.add_namespace(PID, pid_ns_name);
+    ns_opt.add_namespace(IPC, ipc_ns_name);
+    ns_opt.add_namespace(NETWORK, net_ns_name);
+}
+
