@@ -27,9 +27,7 @@ add_executable(jocker_server main.cpp
         ns/ns_options/time_ns_config.cpp
         ns/ns_options/user_ns_config.cpp
         ns/ns_options/uts_ns_config.cpp
-        parser/parser.cpp
         other/common.cpp
-        parser/parser.cpp
         execution/daemon.cpp
         execution/daemon.h
         ns/ns_options/pid_ns_config.cpp

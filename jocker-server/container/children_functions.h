@@ -8,31 +8,27 @@
 #include <memory>
 
 struct child_argument {
-    child_argument(std::vector<std::pair<ns_type, std::string>> &other_ns_to_create, const container_options &other_opts, ns_conf_repository other_repo): opts(other_opts), ns_to_create(other_ns_to_create), repo(std::move(other_repo)) {}
-    std::vector<std::pair<ns_type, std::string>> ns_to_create;
+    explicit child_argument(const container_options &other_opts, const auto &namespaces): opts(other_opts), namespaces(namespaces){}
     container_options opts;
-    ns_conf_repository repo;
+    ns_group namespaces;
 };
 
-void child_init_ns(std::vector<std::pair<ns_type, std::string>> &ns_to_create, ns_conf_repository &repo){
+void child_init_ns(const ns_group &namespaces){
     // The next part of code inits just created namespaces
 
-    // Get namespaces
-    pid_t pid = getpid();
-    std::shared_ptr<ns> new_ns;
-    std::vector<std::shared_ptr<ns>> new_namespaces;
-    for (const auto &entry: ns_to_create) {
-        int fd = -1; // Just mock fd instead of get_ns_handle(entry.first, pid);
-        new_namespaces.emplace_back(create_namespace_entry(entry.first, entry.second, fd, pid));
-    }
-
     // Setup process
-    for (const auto &ns: new_namespaces){
-        ns->internal_setup_ns(repo);
+    const auto &namespace_collection = namespaces.get_namespaces();
+    const auto &namespaces_mask = namespaces.get_ns_mask();
+    for (size_t i = 0; i < NS_TYPES_NUM; ++i){
+        if (namespaces_mask[i]){
+            namespace_collection[i]->internal_setup_ns();
+        }
     }
 
-    for (const auto &ns: new_namespaces){
-        ns->init_internal(repo);
+    for (size_t i = 0; i < NS_TYPES_NUM; ++i){
+        if (namespaces_mask[i]){
+            namespace_collection[i]->init_internal();
+        }
     }
 }
 
@@ -44,7 +40,7 @@ void redirect_to_logs(int fd){
 static int child_function(void *arg){
     auto parent_info = static_cast<child_argument *>(arg);
     sleep(1);
-    child_init_ns(parent_info->ns_to_create, parent_info->repo);
+    child_init_ns(parent_info->namespaces);
 
     // Start the binary
     // TODO: close fds

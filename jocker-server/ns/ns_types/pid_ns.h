@@ -8,17 +8,23 @@ class pid_ns: public ns {
 public:
     pid_ns() = delete;
 
-    pid_ns(std::string name, int fd, ns_type tp, pid_t process_pid);
+    explicit pid_ns(std::string name);
 
-    void configure_ns(const ns_conf_repository &opts) override;
+    pid_ns(std::string name, int fd, pid_t process_pid);
 
-    void internal_setup_ns(const ns_conf_repository &opts) override;
+    void configure_ns() override;
 
-    void external_setup_ns(const ns_conf_repository &opts) override;
+    void internal_setup_ns() override;
 
-    void init_internal(const ns_conf_repository &opts) override;
+    void external_setup_ns() override;
 
-    void init_external(const ns_conf_repository &opts) override;
+    void init_internal() override;
+
+    void init_external() override;
+
+    [[nodiscard]] int get_type() const override{
+        return PID;
+    }
 };
 
 

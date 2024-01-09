@@ -10,6 +10,7 @@
 #include "ns_types/uts_ns.h"
 #include "ns_types/ns_type.h"
 #include "ns_group.h"
+#include "ns_options/ns_options.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>

@@ -12,6 +12,6 @@ mnt_ns_config::mnt_ns_config(std::ifstream &file, int id) : ns_config() {
     check_and_assign_variable(PUT_OLD_PROP, put_old, file, PARSE_ERROR_MSG);
 }
 
-std::shared_ptr<ns> mnt_ns_config::create_ns(const std::string &name ) {
-    return mnt_ns()
+std::shared_ptr<ns> mnt_ns_config::create_ns(const std::string &name) {
+    return std::make_shared<mnt_ns>(name, new_rootfs_path, filesystem, put_old);
 }

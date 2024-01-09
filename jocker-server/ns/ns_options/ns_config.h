@@ -6,6 +6,7 @@
 #define JOCKER_SERVER_NS_CONFIG_H
 
 #include "ns_types/ns.h"
+#include <memory>
 
 const std::string PARSE_ERROR_MSG = "Bad config!";
 
@@ -13,7 +14,7 @@ class ns;
 
 class ns_config {
 public:
-    virtual std::shared_ptr<ns> create_ns() = 0;
+    virtual std::shared_ptr<ns> create_ns(const std::string &name) = 0;
 
     [[nodiscard]] bool compare_id(int id) const{
         if (id == config_id){

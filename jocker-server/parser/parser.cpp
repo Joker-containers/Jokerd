@@ -6,6 +6,7 @@
 #include <iostream>
 #include <boost/property_tree/ini_parser.hpp>
 #include "parser.h"
+#include "ns_options/ns_options.h"
 
 Parser::Parser(const std::string &file_name) : file_name(file_name) {}
 

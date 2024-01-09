@@ -2,14 +2,15 @@
 #define JOCKER_SERVER_NS_H
 
 #include "syscall_wrapper.h"
-#include "ns_options/ns_options.h"
-#include "ns_options/ns_conf_repository.h"
+#include "ns_type.h"
 #include "common.h"
 #include <string>
 #include <unistd.h>
 #include <utility>
 
 typedef int fd_t;
+
+constexpr int MOCK_DESCRIPTOR = -1;
 
 class ns {
 public:
@@ -22,30 +23,42 @@ public:
 
     ns() = delete;
 
-    ns(std::string name, int fd, ns_type tp, pid_t process_pid);
+    explicit ns(std::string &name);
+
+    explicit ns(std::string &&name);
+
+    ns(std::string name, int fd, pid_t process_pid);
 
     void add_pid(pid_t pid);
 
-    virtual void external_setup_ns(const ns_conf_repository &opts);
+    virtual void external_setup_ns();
 
-    virtual void internal_setup_ns(const ns_conf_repository &opts);
+    virtual void internal_setup_ns();
 
-    virtual void configure_ns(const ns_conf_repository &opts) = 0;
+    virtual void configure_ns() = 0;
 
-    virtual void init_internal(const ns_conf_repository &opts);
+    virtual void init_internal();
 
-    virtual void init_external(const ns_conf_repository &opts);
+    virtual void init_external();
 
     [[nodiscard]] bool is_active() const {
         return active;
     }
+
+    void set_active() {
+        active = true;
+    }
+
+    [[nodiscard]] virtual int get_type() const = 0;
+
+    void set_fd(int fd);
 
     ~ns();
 
     std::string m_name;
 protected:
     bool active = false;
-    fd_t m_fd = -1;
+    fd_t m_fd = MOCK_DESCRIPTOR;
     std::vector<pid_t> m_processes_inside = {}; // TODO
 };
 

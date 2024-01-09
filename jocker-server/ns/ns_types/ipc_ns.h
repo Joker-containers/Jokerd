@@ -8,11 +8,17 @@ class ipc_ns: public ns {
 public:
     ipc_ns() = delete;
 
-    ipc_ns(std::string name, int fd, ns_type tp, pid_t process_pid);
+    explicit ipc_ns(std::string name);
 
-    void external_setup_ns(const ns_conf_repository &opts) override;
+    ipc_ns(std::string name, int fd, pid_t process_pid);
 
-    void configure_ns(const ns_conf_repository &opts) override;
+    void external_setup_ns() override;
+
+    void configure_ns() override;
+
+    [[nodiscard]] int get_type() const override{
+        return IPC;
+    }
 };
 
 

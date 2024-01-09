@@ -11,13 +11,21 @@ class uts_ns: public ns {
 public:
     uts_ns() = delete;
 
-    uts_ns(std::string name, int fd, ns_type tp, pid_t process_pid);
+    uts_ns(std::string name, std::string hostname);
 
-    void internal_setup_ns(const ns_conf_repository &opts) override;
+    uts_ns(std::string name, int fd, pid_t process_pid);
 
-    void configure_ns(const ns_conf_repository &opts) override;
+    void internal_setup_ns() override;
 
-    void init_internal(const ns_conf_repository &opts) override;
+    void configure_ns() override;
+
+    void init_internal() override;
+
+    [[nodiscard]] int get_type() const override{
+        return UTS;
+    }
+private:
+    std::string hostname;
 };
 
 

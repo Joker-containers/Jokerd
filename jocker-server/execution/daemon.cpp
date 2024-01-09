@@ -380,7 +380,7 @@ void Daemon::parse_namespace(std::ifstream &file){
     }
 
 
-    pool.declare_ns(static_cast<ns_type>(ns_t), repo.find_config(ns_t, template_id)->create_ns());
+    pool.declare_ns(static_cast<ns_type>(ns_t), repo.find_config(ns_t, template_id)->create_ns(name));
 }
 
 void Daemon::parse_cgroup(std::ifstream &file){

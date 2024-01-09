@@ -24,15 +24,12 @@ extern const std::unordered_map<ns_type, int> NS_CLONE_FLAG;
 /* A class to contain info about container: resource controllers settings, namespaces configurations etc. */
 class container {
 public:
-    container(container_options opts);
+    explicit container(container_options opts);
 
-    static pid_t perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create, ns_conf_repository &repo);
+    static pid_t perform_clone(int new_ns_flags, const container_options &opts, const ns_group& namespaces);
 
 private:
-    void init_namespaces(const ns_conf_repository &opts,
-                         const std::vector<std::pair<ns_type, std::string>>&ns_to_create,
-                         d_resources &daemon_resources,
-                         pid_t pid);
+    void init_namespaces(pid_t pid);
 
     int prepare_flags();
 
