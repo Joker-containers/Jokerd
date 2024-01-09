@@ -1,6 +1,5 @@
 #include "daemon.h"
 
-
 void runtime(Daemon &daemon) {
     while (true) {
         daemon.get_request_type();

@@ -34,8 +34,6 @@ container_options Parser::parse_options(const std::string& binary_name) {
         namespace_options._entry_valid[i] = false;
     }
 
-    // TODO: ADD FUCKING CGROUPS PARSING, LIUBOMYR!!!
-
     container_options cont_options(namespace_options, bin_arguments, bin_path, container_name, -1);
 
     return cont_options;

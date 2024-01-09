@@ -202,9 +202,48 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
 }
 
 void Daemon::get_configs(){
-    std::string config;
 
-    parse_config(config);
+    // ======================================================================================
+    // Getting a config
+
+    log_message("Starting to receive config files...");
+
+    log_message("\nReceiving config size...");
+    uint64_t config_name_size;
+    recv_all(client_socket, &config_name_size, sizeof(config_name_size));
+    log_message("Received config_file filename length: " + std::to_string(config_name_size));
+
+    log_message("\nReceiving config filename...");
+    std::vector<char> config_name(config_name_size + 1);
+    config_name[config_name_size] = '\0';
+    recv_all(client_socket, config_name.data(), config_name_size);
+    log_message("Received config filename: " + std::string(config_name.data()));
+
+    log_message("\nReceiving config size...");
+    uint64_t config_size;
+    recv_all(client_socket, &config_size, sizeof(config_size));
+    log_message("Received config size: " + std::to_string(config_size));
+
+    log_message("\nReceiving config_file...");
+    std::vector<char> config_file(config_size);
+    recv_all(client_socket, config_file.data(), config_size);
+    log_message("Received config_file.");
+
+    // ======================================================================================
+    // Creating a config
+
+    std::ofstream file(config_name.data());
+
+    if (!file) {
+        log_message("Error: was not able to create a config file on the server");
+        throw std::runtime_error("Cannot save config file.");
+    }
+
+    file << config_file.data();
+    log_message("Created config file on the server");
+
+
+    parse_config(config_name.data());
 }
 
 
@@ -233,7 +272,7 @@ void Daemon::run_container() {
 
 
 
-    // ======================================================================\
+    // ======================================================================
     //
     // Creating a container
 
