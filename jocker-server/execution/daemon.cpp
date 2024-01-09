@@ -203,7 +203,7 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
 
 void Daemon::get_configs(){
     std::string config;
-    
+
     parse_config(config);
 }
 
