@@ -201,7 +201,7 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
 
 void Daemon::run_container() {
     // ======================================================================
-    // Creating binaries
+    // Getting binaries and configs
     std::string binary_name, config_filename;
     try{
         std::tie(binary_name, config_filename) = prepare_container_resources();
@@ -212,8 +212,12 @@ void Daemon::run_container() {
 
     // ======================================================================
     // Parsing config file
+
     std::ifstream file(config_filename);
     auto opts = parse_container_config(file);
+
+    // ======================================================================
+    // Opening logs file
 
     std::string container_name;
     int logs_fd = syscall_wrapper(open, "open", container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
@@ -223,7 +227,6 @@ void Daemon::run_container() {
     // ======================================================================\
     //
     // Creating a container
-    // ...
 
     /**
      * take shared pointers to needed namespaces from pool
@@ -232,7 +235,7 @@ void Daemon::run_container() {
      * launch container
     */
 
-    
+
     auto container_namespaces = pool.get_ns_group(opts.ns_opt);
     container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, logs_fd);
     container c = container(opt);
@@ -415,7 +418,91 @@ void Daemon::parse_config(const std::string &file) {
 }
 
 container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
-    return container_parsed_opts(file);
+    std::string line;
+
+    std::string container_name;
+    std::string uts_ns_name;
+    std::string user_ns_name;
+    std::string mnt_ns_name;
+    std::string pid_ns_name;
+    std::string ipc_ns_name ;
+    std::string net_ns_name;
+    std::string time_ns_name;
+    std::string prop;
+
+    container_parsed_opts opts = container_parsed_opts();
+
+    std::getline(file, line);
+
+    std::tie(prop, container_name) = parse_variable(line);
+    if (prop != CONTAINER_NAME_PROP || container_name.empty()){
+        throw std::runtime_error("Bad config!");
+    }
+
+    std::getline(file, line);
+    std::tie(prop, ipc_ns_name) = parse_variable(line);
+    if (prop != IPC_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!ipc_ns_name.empty()){
+        opts.ns_opt.add_namespace(IPC, ipc_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, user_ns_name) = parse_variable(line);
+    if (prop != USER_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!user_ns_name.empty()){
+        opts.ns_opt.add_namespace(USER, user_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, mnt_ns_name) = parse_variable(line);
+    if (prop != MNT_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!mnt_ns_name.empty()){
+        opts.ns_opt.add_namespace(MOUNT, mnt_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, pid_ns_name) = parse_variable(line);
+    if (prop != PID_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!pid_ns_name.empty()){
+        opts.ns_opt.add_namespace(PID, pid_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, net_ns_name) = parse_variable(line);
+    if (prop != NET_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!net_ns_name.empty()){
+        opts.ns_opt.add_namespace(NETWORK, net_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, time_ns_name) = parse_variable(line);
+    if (prop != TIME_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!time_ns_name.empty()){
+        opts.ns_opt.add_namespace(TIME, time_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, uts_ns_name) = parse_variable(line);
+    if (prop != UTS_NAMESPACE_NAME_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!uts_ns_name.empty()){
+        opts.ns_opt.add_namespace(UTS, uts_ns_name);
+    }
+
+    return opts;
 }
 
 
