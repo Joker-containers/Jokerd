@@ -60,3 +60,12 @@ void send_all(int socket, void *buffer, size_t size, int flags) {
         size -= bytes_send;
     }
 }
+
+std::pair<std::string, std::string> parse_variable(const std::string &line){
+    auto const delimiter_pos = line.find_first_of(':');
+    if (delimiter_pos == std::string::npos){
+        throw std::runtime_error("Invalid formatting!");
+    }
+    std::string property = line.substr(0, delimiter_pos);
+    std::string valur = line.substr(delimiter_pos + 1, line.size() - 1);
+}

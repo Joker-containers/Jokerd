@@ -19,6 +19,16 @@ public:
     using runtime_error::runtime_error;
 };
 
+const std::string NAMESPACE_TEMPLATE = "Namespace-template\n";
+const std::string NAMESPACE = "Namespace\n";
+const std::string CGROUP = "Cgroup\n";
+const std::string EMPTY = "";
+
+const std::string ID_PROP = "ID";
+const std::string NAMESPACE_TYPE = "Namespace type";
+
+const std::string NAMESPACE_NAME = "Namespace name";
+const std::string TEMPLATE_ID = "Template id";
 
 class Daemon {
 public:
@@ -39,6 +49,14 @@ public:
     void send_trace();
 
     void run_container();
+
+    void parse_ns_template(std::ifstream &file);
+
+    void parse_config(const std::string &file);
+
+    void parse_namespace(std::ifstream &file);
+
+    void parse_cgroup(std::ifstream &file);
 
     std::pair<std::string, std::string> prepare_container_resources();
 

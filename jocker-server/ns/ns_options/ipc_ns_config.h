@@ -2,7 +2,12 @@
 #define JOCKER_SERVER_IPC_NS_CONFIG_H
 
 
-class ipc_ns_config {
+#include "ns_config.h"
+#include <iostream>
+
+class ipc_ns_config: public ns_config {
+public:
+    explicit ipc_ns_config(std::ifstream &file, int id);
 
 };
 

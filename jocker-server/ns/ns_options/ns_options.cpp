@@ -1,12 +1,8 @@
 #include "ns_options.h"
 
 ns_options::ns_options() {
-    _ns_collection.reserve(NS_TYPES_NUM);
-    _entry_valid.reserve(NS_TYPES_NUM);
-    for (size_t i = 0; i < NS_TYPES_NUM; i++){
-        _ns_collection.emplace_back();
-        _entry_valid.emplace_back(false);
-    }
+    _ns_collection.resize(NS_TYPES_NUM);
+    _entry_valid.resize(NS_TYPES_NUM, false);
 }
 
 /* Constructs object from a vector of namespace's names.
@@ -40,6 +36,9 @@ ns_options::ns_options(const std::vector<std::string> &ns_collection, const std:
 void ns_options::add_namespace(ns_type tp, std::string &ns_name) {
     if (tp >= NS_TYPES_NUM){
         throw std::runtime_error("An attempt to add a name of the non-existing namespace type occured");
+    }
+    if (_entry_valid[tp]){
+        throw std::runtime_error("A namespace of such a type exists already!");
     }
     _ns_collection[tp] = ns_name;
     _entry_valid[tp] = true;

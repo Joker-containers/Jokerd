@@ -36,7 +36,7 @@ public:
 
     explicit ns_options(const std::vector<std::string>& ns_collection, const std::vector<bool>& entry_valid);
 
-    [[nodiscard]] const std::vector<std::string> &get_required_ns() const {
+    [[nodiscard]] const std::vector<std::string> &get_ns_required() const {
         return _ns_collection;
     }
 
@@ -46,7 +46,7 @@ public:
 
     void add_namespace(ns_type tp, std::string &ns_name);
 
-public:
+private:
     std::vector<std::string> _ns_collection;
     std::vector<bool> _entry_valid;
 };

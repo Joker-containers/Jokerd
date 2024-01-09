@@ -1,12 +1,8 @@
 #include "ns_group.h"
 
 ns_group::ns_group() {
-    m_ns_collection.reserve(NS_TYPES_NUM);
-    m_entry_valid.reserve(NS_TYPES_NUM);
-    for (size_t i = 0; i < NS_TYPES_NUM; i++){
-        m_ns_collection.emplace_back(nullptr);
-        m_entry_valid.emplace_back(false);
-    }
+    m_ns_collection.resize(NS_TYPES_NUM, nullptr);
+    m_entry_valid.resize(NS_TYPES_NUM, false);
 }
 
 ns_group::ns_group(std::vector<std::shared_ptr<ns>> &namespaces) {

@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <iostream>
 #include <sys/socket.h>
+#include <fstream>
 
 struct raii_fd {
     int fd;
@@ -35,5 +36,18 @@ void recv_all(int socket, void *buffer, size_t size, int flags = 0);
 
 void send_all(int socket, void *buffer, size_t size, int flags = 0);
 
+std::pair<std::string, std::string> parse_variable(const std::string &line);
+
+template<typename T>
+void check_and_assign_variable(const std::string &expected_variable_name, T& field, std::ifstream &file, const std::string &err_msg){
+    std::string line;
+    std::getline(file, line);
+
+    auto res = parse_variable(line);
+    if (res.first != expected_variable_name){
+        throw std::runtime_error(err_msg);
+    }
+    field = res.second;
+}
 
 #endif //JOCKER_SERVER_COMMON_H

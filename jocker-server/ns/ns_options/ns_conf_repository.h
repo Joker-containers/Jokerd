@@ -15,13 +15,13 @@
 
 class ns_conf_repository {
 public:
-    std::unordered_map<std::string, ipc_ns_config> ipc_ns_configs;
-    std::unordered_map<std::string, mnt_ns_config> mnt_ns_configs;
-    std::unordered_map<std::string, net_ns_config> net_ns_configs;
-    std::unordered_map<std::string, pid_ns_config> pid_ns_configs;
-    std::unordered_map<std::string, time_ns_config> time_ns_configs;
-    std::unordered_map<std::string, user_ns_config> user_ns_configs;
-    std::unordered_map<std::string, uts_ns_config> uts_ns_configs;
+    ns_conf_repository();
+
+    void add_config(int ns_type, std::shared_ptr<ns_config> &&conf);
+
+    std::shared_ptr<ns_config> find_config(int ns_type, int id);
+
+    std::vector<std::vector<std::shared_ptr<ns_config>>> all_configs;
 };
 
 

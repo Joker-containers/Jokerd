@@ -36,12 +36,16 @@ public:
 
     virtual void init_external(const ns_conf_repository &opts);
 
+    [[nodiscard]] bool is_active() const {
+        return active;
+    }
+
     ~ns();
 
     std::string m_name;
 protected:
-    ns_type m_tp;
-    fd_t m_fd;
+    bool active = false;
+    fd_t m_fd = -1;
     std::vector<pid_t> m_processes_inside = {}; // TODO
 };
 

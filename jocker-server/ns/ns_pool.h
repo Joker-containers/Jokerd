@@ -9,6 +9,7 @@
 #include "ns_types/user_ns.h"
 #include "ns_types/uts_ns.h"
 #include "ns_types/ns_type.h"
+#include "ns_group.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
@@ -17,34 +18,20 @@
 
 class ns_pool {
 public:
-    bool exists_ns(ns_type tp, const std::string &ns_name) const;
+    ns_pool();
 
-    void register_ns(ns_type tp, const std::shared_ptr<ns> &to_register);
+    [[nodiscard]] bool exists_ns(ns_type tp, const std::string &ns_name) const;
 
-    std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name) const;
+    void declare_ns(ns_type tp, const std::shared_ptr<ns> &to_declare);
+
+    [[nodiscard]] std::shared_ptr<ns> get_ns(ns_type tp, const std::string &ns_name) const;
 
     bool delete_ns(ns_type tp, const std::string &ns_name);
 
-private:
-    std::unordered_map<ns_type, std::vector<std::shared_ptr<ns>> &> ns_type_map{
-            {IPC,     all_ipc_ns},
-            {NETWORK, all_net_ns},
-            {MOUNT,   all_mnt_ns},
-            {PID,     all_pid_ns},
-            {TIME,    all_time_ns},
-            {USER,    all_user_ns},
-            {UTS,     all_uts_ns}
-    };
+    ns_group get_ns_group(ns_options &opts) const;
 
-    // Making this members of type std::vector<std::shared_ptr<ns_type>> would be better,
-    // but that brings many problems
-    std::vector<std::shared_ptr<ns>> all_ipc_ns;
-    std::vector<std::shared_ptr<ns>> all_net_ns;
-    std::vector<std::shared_ptr<ns>> all_mnt_ns;
-    std::vector<std::shared_ptr<ns>> all_pid_ns;
-    std::vector<std::shared_ptr<ns>> all_time_ns;
-    std::vector<std::shared_ptr<ns>> all_user_ns;
-    std::vector<std::shared_ptr<ns>> all_uts_ns;
+private:
+    std::vector<std::vector<std::shared_ptr<ns>>> all_ns;
 };
 
 

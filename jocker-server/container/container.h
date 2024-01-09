@@ -16,7 +16,6 @@
 
 struct d_resources{
     ns_pool& d_ns_pool;
-    ns_conf_repository& conf_repo;
     // Cgroup pool to be added?
 };
 
@@ -25,7 +24,7 @@ extern const std::unordered_map<ns_type, int> NS_CLONE_FLAG;
 /* A class to contain info about container: resource controllers settings, namespaces configurations etc. */
 class container {
 public:
-    container(container_options opts, d_resources &daemon_resources);
+    container(container_options opts);
 
     static pid_t perform_clone(int new_ns_flags, const container_options &opts, std::vector<std::pair<ns_type, std::string>> &ns_to_create, ns_conf_repository &repo);
 
@@ -35,8 +34,7 @@ private:
                          d_resources &daemon_resources,
                          pid_t pid);
 
-    std::vector<std::pair<ns_type, std::string>> prepare_namespaces(const auto &ns_names, const auto &ns_mask,
-                                                                    const ns_pool &ns_pool, int &new_ns_flags);
+    int prepare_flags();
 
     // Can we rely on info about container contained in this instance?
     // If some external impact on configs was spotted... Well that's user's problems know, so we invalidate this object... Or no?

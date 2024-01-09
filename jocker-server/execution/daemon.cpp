@@ -213,6 +213,9 @@ void Daemon::run_container() {
     // ======================================================================
     // Parsing config file
 
+    Parser parser(config_filename);
+//    auto options = parser.parse_options(binary_name);
+
     std::string uts_ns_name = "uts_test";
     std::string user_ns_name = "user_test";
     std::string mnt_ns_name = "mnt_test";
@@ -252,18 +255,23 @@ void Daemon::run_container() {
 
     int logs_fd = syscall_wrapper(open, "open", container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
 
-    container_options opt = container_options(ns_opt, bin_args, bin_path, container_name, logs_fd);
-    
-//    Parser parser(config_filename);
-//    auto options = parser.parse_options(binary_name);
+
 
     // ======================================================================\
-    // TODO: ADD FUCKING CONTAINER CREATION. THE FUCK YOU'RE LOOKING AT???
+    //
     // Creating a container
     // ...
 
-    auto res = d_resources(pool, repo);
-    container c = container(opt, res);
+    /**
+     * take shared pointers to needed namespaces from pool
+     * form ns group
+     * construct container options
+     * launch container
+    */
+
+    auto container_namespaces = pool.get_ns_group(ns_opt);
+    container_options opt = container_options(container_namespaces, bin_args, bin_path, container_name, logs_fd);
+    container c = container(opt);
     sleep(5);
 }
 
@@ -291,3 +299,166 @@ Daemon::~Daemon() {
     log_file_reader.close();
     log_file_writer.close();
 }
+
+/**
+* Configs parser
+ *
+ * parse line
+ * if line is ns template
+ *      add this template to repository
+ * else if line is ns
+ *      create ns by this template and add to ns pool (after 'return' probably)
+ * else if line is cgroup
+ *      tbd
+ * else
+ *      error
+*/
+
+
+void Daemon::parse_ns_template(std::ifstream &file){
+    std::string line;
+    int ns_t;
+    int template_id;
+    std::getline(file, line);
+
+    auto [template_id_prop, template_id_str] = parse_variable(line);
+    if (template_id_prop != ID_PROP){
+        throw std::runtime_error("Bad config!");
+    }
+    try {
+        template_id = stoi(template_id_str);
+    } catch (const std::invalid_argument& e) {
+        throw std::runtime_error("Bad config!");
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("Bad config!");
+    }
+
+    auto [ns_type_prop, ns_type_string] = parse_variable(line);
+    if (ns_type_prop != NAMESPACE_TYPE){
+        throw std::runtime_error("Bad config!");
+    }
+    try {
+        ns_t = stoi(ns_type_string);
+    } catch (const std::invalid_argument& e) {
+        throw std::runtime_error("Bad config!");
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("Bad config!");
+    }
+
+    std::shared_ptr<ns_config> new_ns_conf;
+    switch (ns_t){
+        case USER:
+            new_ns_conf = std::make_shared<user_ns_config>(file, template_id);
+            break;
+        case MOUNT:
+            new_ns_conf = std::make_shared<mnt_ns_config>(file, template_id);
+            break;
+        case PID:
+            new_ns_conf = std::make_shared<pid_ns_config>(file, template_id);
+            break;
+        case IPC:
+            new_ns_conf = std::make_shared<ipc_ns_config>(file, template_id);
+            break;
+        case NETWORK:
+            new_ns_conf = std::make_shared<net_ns_config>(file, template_id);
+            break;
+        case TIME:
+            new_ns_conf = std::make_shared<time_ns_config>(file, template_id);
+            break;
+        case UTS:
+            new_ns_conf = std::make_shared<uts_ns_config>(file, template_id);
+            break;
+        default:
+            break;
+    }
+
+    repo.add_config(ns_t, std::move(new_ns_conf));
+}
+
+void Daemon::parse_namespace(std::ifstream &file){
+    std::string line;
+
+    int ns_t;
+    int template_id;
+
+    std::getline(file, line);
+
+    auto [name_prop, name] = parse_variable(line);
+    if (name_prop != NAMESPACE_NAME || name.empty()){
+        throw std::runtime_error("Bad config!");
+    }
+
+    auto [template_id_prop, template_id_str] = parse_variable(line);
+    if (template_id_prop != TEMPLATE_ID){
+        throw std::runtime_error("Bad config!");
+    }
+    try {
+        template_id = stoi(template_id_str);
+    } catch (const std::invalid_argument& e) {
+        throw std::runtime_error("Bad config!");
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("Bad config!");
+    }
+
+    auto [ns_type_prop, ns_type_string] = parse_variable(line);
+    if (ns_type_prop != NAMESPACE_TYPE){
+        throw std::runtime_error("Bad config!");
+    }
+    try {
+        ns_t = stoi(ns_type_string);
+    } catch (const std::invalid_argument& e) {
+        throw std::runtime_error("Bad config!");
+    } catch (const std::out_of_range& e) {
+        throw std::runtime_error("Bad config!");
+    }
+
+
+    pool.declare_ns(static_cast<ns_type>(ns_t), repo.find_config(ns_t, template_id)->create_ns());
+}
+
+void Daemon::parse_cgroup(std::ifstream &file){
+    // TODO
+}
+
+
+void Daemon::parse_config(const std::string &file) {
+    std::ifstream input_file(file);
+    if (!input_file.is_open()) {
+        throw std::runtime_error("Failed to open config file!");
+    }
+
+    std::string line;
+
+    while (std::getline(input_file, line)) {
+        if (line == NAMESPACE_TEMPLATE){
+            parse_ns_template(input_file);
+        }
+        else if (line == NAMESPACE){
+            parse_namespace(input_file);
+        }
+        else if (line == CGROUP){
+            parse_cgroup(input_file);
+        }
+        else if (line == EMPTY){
+            continue;
+        }
+        else{
+            throw std::runtime_error("Bad config!");
+        }
+    }
+
+    input_file.close();
+}
+
+
+/**
+* Container options parser
+ *
+ * parse vars
+ * check for unknown
+ * check for absent
+ * set options
+ *
+ * return ns options
+ *
+*/
