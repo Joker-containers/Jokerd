@@ -98,5 +98,7 @@ private:
     sockaddr_in client_addr;
     ns_pool pool;
     ns_conf_repository repo;
+
+    void get_configs();
 };
 #endif //JOCKER_SERVER_DAEMON_H

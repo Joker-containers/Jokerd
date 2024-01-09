@@ -80,12 +80,15 @@ void Daemon::get_request_type() {
 }
 
 void Daemon::execute_request() {
+    // TODO change magic constants
     if (current_request == 0) {
         this->run_container();
     } else if (current_request == 1) {
         this->send_trace();
     } else if (current_request == 2) {
         this->send_logs();
+    } else if (current_request == 3){
+        this->get_configs();
     } else {
         log_message(std::string("Unrecognized request type: ") + std::to_string(current_request), true);
     }
@@ -196,6 +199,12 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
     log_message("Saved config file to " + config_filename + ".\n");
 
     return {binary_name, config_filename};
+}
+
+void Daemon::get_configs(){
+    std::string config;
+    
+    parse_config(config);
 }
 
 
