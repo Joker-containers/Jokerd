@@ -20,17 +20,9 @@ void cgroup_manager::setup_controllers() {
     }
 
     if (mkdir(mem_and_pid_path.c_str(), 0755) == -1 && errno != EEXIST) {
-        if (errno != EEXIST) {
-            throw std::runtime_error("Failed to create mem and pid controllers dir.");
-        }
-    } else {
-        std::string command = "mount -t cgroup2 none " + mem_and_pid_path;
-        if (system(command.c_str()) == 0) {
-            std::cout << "Memory and pids controllers mounted." << std::endl;
-        } else {
-            throw std::runtime_error("Failed to mount memory and pids controllers dir.");
-        }
+        throw std::runtime_error("Failed to create mem and pid controllers dir.");
     }
+    std::cout << "Memory and pids controllers mounted." << std::endl;
 }
 
 void cgroup_manager::child_remount_cgroup() {
@@ -43,11 +35,13 @@ void cgroup_manager::child_remount_cgroup() {
     if (umount(cpu_and_io_path.c_str()) != 0){
         throw std::runtime_error("Failed to unmount cgroup.");
     }
-    if (umount(mem_and_pid_path.c_str()) != 0){
-        throw std::runtime_error("Failed to unmount cgroup.");
+
+    std::string command = "mount -t cgroup -o cpu,cpuacct,blkio none " + cpu_and_io_path;
+    if (system(command.c_str()) != 0) {
+        throw std::runtime_error("Failed to mount cpu and io controllers dir.");
     }
 
-    setup_controllers();
+    std::cout<<"Cgroup1 remounted"<<std::endl;
 }
 
 void cgroup_manager::init_cgroup(const cgroup& cgroup_obj){
@@ -61,4 +55,8 @@ void cgroup_manager::init_cgroup(const cgroup& cgroup_obj){
 
         cgroups.insert(cgroup_obj.cgroup_name);
     }
+}
+
+void cgroup_manager::add_child(const cgroup& cgroup_obj, int pid) {
+    cgroup_obj.add_child_to_cgroup(cpu_and_io_path, mem_and_pid_path, pid);
 }
