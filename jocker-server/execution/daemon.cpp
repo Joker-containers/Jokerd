@@ -235,10 +235,11 @@ void Daemon::run_container() {
      * launch container
     */
 
-
+    cgroup_manager manager = cgroup_manager();
+    auto resources = d_resources(manager);
     auto container_namespaces = pool.get_ns_group(opts.ns_opt);
     container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, logs_fd);
-    container c = container(opt);
+    container c = container(opt, resources);
     sleep(5);
 }
 
