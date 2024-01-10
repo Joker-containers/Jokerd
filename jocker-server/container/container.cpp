@@ -83,7 +83,8 @@ void container::init_namespaces(pid_t pid) {
 }
 
 container::container(container_options opts): _cname(std::move(opts.container_name)),
-                                                _cgroup_name(std::move(opts.cgroup_name)){ //TODO
+                                                _cgroup_name(std::move(opts.cgroup_name)),
+                                                _namespaces(std::move(opts.namespaces)){ //TODO
     valid = true; // TODO
     int new_ns_flags = 0;
 

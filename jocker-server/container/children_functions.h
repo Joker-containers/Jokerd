@@ -33,9 +33,14 @@ void child_init_ns(const ns_group &namespaces){
 }
 
 void redirect_to_logs(int fd){
-    syscall_wrapper(dup2, "dup2", fd, STDOUT_FILENO);
-    syscall_wrapper(dup2, "dup2", fd, STDERR_FILENO);
-    syscall_wrapper(close, "close", fd);
+    try{
+        syscall_wrapper(dup2, "dup2", fd, STDOUT_FILENO);
+        syscall_wrapper(dup2, "dup2", fd, STDERR_FILENO);
+        syscall_wrapper(close, "close", fd);
+    }
+    catch (std::exception &e){
+        std::cerr << e.what() << std::endl;
+    }
 }
 
 static int child_function(void *arg){
@@ -45,13 +50,13 @@ static int child_function(void *arg){
 
     // Start the binary
     // TODO: close fds
+    //sleep(10);
     auto progname = strdup(parent_info->opts.bin_path.c_str());
     auto args = parent_info->opts.bin_arguments;
     args.insert(args.cbegin(), progname);
     auto args_ptr = createCharPtrArray(args);
     //sleep(3);
-    //redirect_to_logs(parent_info->opts.output_fd);
-    std::cout << "here" << std::endl;
+    redirect_to_logs(parent_info->opts.output_fd);
     auto error = execvp(progname, args_ptr.get()); // TODO: handle the errors
     perror("execvp");
     return 0;

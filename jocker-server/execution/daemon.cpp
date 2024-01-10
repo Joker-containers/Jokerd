@@ -149,12 +149,14 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
     if (check_file.good()) {
         std::string error_message = "\nError: File with the name " + std::string(formatted_binary_name) + " already exists.";
         log_message(error_message, true);
-        throw binary_exists_error(error_message);
+        check_file.close();
+        log_message("Rewriting existing file!", true);
+        //throw binary_exists_error(error_message);
     }
-    check_file.close();
+
 
     log_message("\nSaving binary file...");
-    std::ofstream binary_file(formatted_binary_name, std::ios::binary);
+    std::ofstream binary_file(formatted_binary_name, std::ios::binary | std::ios::trunc);
     syscall_wrapper(chmod, "chmod", formatted_binary_name.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     binary_file.write(binary.data(), (std::streamsize)binary.size());
     binary_file.close();
@@ -238,7 +240,8 @@ void Daemon::run_container() {
     // ======================================================================
     // Opening logs file
 
-    int logs_fd = syscall_wrapper(open, "open", opts.container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
+    int logs_fd = syscall_wrapper(open, "open", opts.container_name.c_str(), O_CREAT | O_RDWR,  S_IRUSR | S_IWUSR |
+    S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // TODO: move this in container constructor
 
 
 
