@@ -240,8 +240,8 @@ void Daemon::run_container() {
     // ======================================================================
     // Opening logs file
 
-    int logs_fd = syscall_wrapper(open, "open", opts.container_name.c_str(), O_CREAT | O_RDWR,  S_IRUSR | S_IWUSR |
-    S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // TODO: move this in container constructor
+    int logs_fd = syscall_wrapper(open, "open", opts.container_name.c_str(), O_CREAT | O_RDWR | O_TRUNC,
+                                  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH); // TODO: move this in container constructor
 
 
 

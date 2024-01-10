@@ -45,7 +45,7 @@ void redirect_to_logs(int fd){
 
 static int child_function(void *arg){
     auto parent_info = static_cast<child_argument *>(arg);
-    sleep(1);
+    sleep(2);
     child_init_ns(parent_info->namespaces);
 
     // Start the binary

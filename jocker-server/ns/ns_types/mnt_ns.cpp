@@ -15,7 +15,7 @@ void mnt_ns::internal_setup_ns() {
         const char *mnt = new_rootfs_path.c_str();
         syscall_wrapper(mount, "mount", new_rootfs_path.c_str(), mnt, "ext4", MS_BIND, "");
         syscall_wrapper(chdir, "chdir", mnt);
-        std::cerr << put_old << std::endl;
+        //std::cerr << put_old << std::endl;
         if (mkdir(put_old.c_str(), 0777) && errno != EEXIST){
             perror("mkdir");
             throw std::runtime_error("Failed to mkdir for putting old filesystem there");
