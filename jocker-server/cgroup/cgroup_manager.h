@@ -4,17 +4,19 @@
 #include "cgroup.h"
 #include <set>
 
+const std::string CPU_AND_IO_PATH = "/sys/fs/cgroup/cpu,blkio/";
+const std::string MEM_AND_PID_PATH = "/sys/fs/cgroup/";
+
 class cgroup_manager {
 public:
-    void setup_controllers();
-    void child_remount_cgroup();
-    void add_child(const cgroup& cgroup_obj, int pid);
+    cgroup_manager();
+
+    static void setup_controllers();
+    static void child_remount_cgroup();
+    static void add_child(const std::string& cgroup_name, int pid);
 
     void init_cgroup(const cgroup& cgroup_obj);
 private:
-    // Path to the cgroup folder
-    std::string cpu_and_io_path{"/sys/fs/cgroup/cpu,blkio/"};
-    std::string mem_and_pid_path{"/sys/fs/cgroup/"};
     std::set<std::string> cgroups;
 };
 

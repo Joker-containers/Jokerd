@@ -283,11 +283,9 @@ void Daemon::run_container() {
      * launch container
     */
 
-    cgroup_manager manager = cgroup_manager();
-    auto resources = d_resources(manager);
     auto container_namespaces = pool.get_ns_group(opts.ns_opt);
-    container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, logs_fd);
-    container c = container(opt, resources);
+    container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, opts.cgroup_name, logs_fd);
+    container c = container(opt);
     sleep(5);
 }
 
@@ -325,7 +323,7 @@ Daemon::~Daemon() {
  * else if line is ns
  *      create ns by this template and add to ns pool (after 'return' probably)
  * else if line is cgroup
- *      tbd
+ *      create cgroup with received limits
  * else
  *      error
 */
@@ -433,7 +431,36 @@ void Daemon::parse_namespace(std::ifstream &file){
 }
 
 void Daemon::parse_cgroup(std::ifstream &file){
-    // TODO
+    cgroup instance;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        auto [property, value] = parse_variable(line);
+        if (property == CGROUP_NAME)
+            instance.cgroup_name = value;
+        else if (property == READ_BPS)
+            instance.read_bps = value;
+        else if (property == WRITE_BPS)
+            instance.write_bps = value;
+        else if (property == CFS_QUOTA)
+            instance.cfs_quota = value;
+        else if (property == CFS_PERIOD)
+            instance.cfs_period = value;
+        else if (property == MEMORY_HIGH)
+            instance.memory_high = value;
+        else if (property == MEMORY_MAX)
+            instance.memory_max = value;
+        else if (property == SWAP_MAX)
+            instance.swap_max = value;
+        else if (property == PIDS_MAX)
+            instance.pids_max = value;
+        else
+            throw std::runtime_error("Bad config!");
+    }
+    if (instance.cgroup_name.empty())
+        throw std::runtime_error("No cgroup name!");
+
+    manager.init_cgroup(instance);
 }
 
 
@@ -477,6 +504,7 @@ container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
     std::string ipc_ns_name ;
     std::string net_ns_name;
     std::string time_ns_name;
+    std::string cgroup_name;
     std::string prop;
 
     container_parsed_opts opts = container_parsed_opts();
@@ -549,6 +577,15 @@ container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
     }
     if (!uts_ns_name.empty()){
         opts.ns_opt.add_namespace(UTS, uts_ns_name);
+    }
+
+    std::getline(file, line);
+    std::tie(prop, cgroup_name) = parse_variable(line);
+    if (prop != CGROUP_NAME){
+        throw std::runtime_error("Bad config!");
+    }
+    if (!cgroup_name.empty()){
+        opts.cgroup_name = cgroup_name;
     }
 
     return opts;

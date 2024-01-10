@@ -11,6 +11,7 @@
 #include <fstream>
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
+#include "cgroup_manager.h"
 
 constexpr int INVALID_FD = -1;
 
@@ -40,6 +41,16 @@ const std::string NET_NAMESPACE_NAME_PROP = "Network namespace name";
 const std::string TIME_NAMESPACE_NAME_PROP = "Time namespace name";
 const std::string UTS_NAMESPACE_NAME_PROP = "UTS namespace name";
 
+const std::string CGROUP_NAME = "Cgroup name";
+const std::string READ_BPS = "Read bps";
+const std::string WRITE_BPS = "Write bps";
+const std::string CFS_QUOTA = "Cfs quota";
+const std::string CFS_PERIOD = "Cfs period";
+const std::string MEMORY_HIGH = "Memory high";
+const std::string MEMORY_MAX = "Memory max";
+const std::string SWAP_MAX = "Swap max";
+const std::string PIDS_MAX = "Pids max";
+
 struct container_parsed_opts {
     explicit container_parsed_opts(std::ifstream &file);
 
@@ -48,6 +59,7 @@ struct container_parsed_opts {
     std::string bin_path = "ip";
     std::vector<std::string> bin_args = {"link", "list"};
     std::string container_name = "FIRST CONTAINER";
+    std::string cgroup_name;
     ns_options ns_opt = ns_options();
 };
 
@@ -98,6 +110,7 @@ private:
     sockaddr_in client_addr;
     ns_pool pool;
     ns_conf_repository repo;
+    cgroup_manager manager{};
 
     void get_configs();
 };
