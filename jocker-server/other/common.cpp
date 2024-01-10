@@ -37,16 +37,17 @@ int write_to_file(const std::string &path, const std::string &content) {
 }
 
 
-void recv_all(int socket, void *buffer, size_t size, int flags) {
+int recv_all(int socket, void *buffer, size_t size, int flags) {
     ssize_t total_bytes_read = 0;
-    ssize_t bytes_read;
+    ssize_t bytes_read = 1;
     auto current_buf_ptr = static_cast<char *>(buffer);
 
-    while (size > 0) {
+    while (size > 0 && bytes_read > 0) {
         bytes_read = syscall_wrapper(recv, "recv", socket, current_buf_ptr + total_bytes_read, size, flags);
         total_bytes_read += bytes_read;
         size -= bytes_read;
     }
+    return total_bytes_read;
 }
 
 void send_all(int socket, void *buffer, size_t size, int flags) {
@@ -67,5 +68,7 @@ std::pair<std::string, std::string> parse_variable(const std::string &line){
         throw std::runtime_error("Invalid formatting!");
     }
     std::string property = line.substr(0, delimiter_pos);
-    std::string valur = line.substr(delimiter_pos + 1, line.size() - 1);
+    const auto variable_start = line.find_first_not_of(' ', delimiter_pos + 1);
+    std::string value = line.substr(variable_start);
+    return {property, value};
 }

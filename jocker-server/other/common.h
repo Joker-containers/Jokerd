@@ -32,7 +32,7 @@ std::unique_ptr<char *[], void (*)(char **)> createCharPtrArray(const std::vecto
 
 int write_to_file(const std::string &path, const std::string &content);
 
-void recv_all(int socket, void *buffer, size_t size, int flags = 0);
+int recv_all(int socket, void *buffer, size_t size, int flags = 0);
 
 void send_all(int socket, void *buffer, size_t size, int flags = 0);
 

@@ -2,8 +2,12 @@
 
 void runtime(Daemon &daemon) {
     while (true) {
-        daemon.get_request_type();
-        daemon.execute_request();
+        if (daemon.get_request_type()){
+            daemon.execute_request();
+        }
+        else {
+            daemon.reconnect();
+        }
     }
 }
 

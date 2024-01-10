@@ -11,6 +11,7 @@
 #include <fstream>
 #include "ns_pool.h"
 #include "ns_options/ns_conf_repository.h"
+#include "daemon_socket.h"
 
 constexpr int INVALID_FD = -1;
 
@@ -19,19 +20,19 @@ public:
     using runtime_error::runtime_error;
 };
 
-const std::string NAMESPACE_TEMPLATE = "Namespace-template\n";
-const std::string NAMESPACE = "Namespace\n";
-const std::string CGROUP = "Cgroup\n";
+const std::string NAMESPACE_TEMPLATE = "Namespace-template";
+const std::string NAMESPACE = "Namespace";
+const std::string CGROUP = "Cgroup";
 const std::string EMPTY = "";
 
 const std::string ID_PROP = "ID";
 const std::string NAMESPACE_TYPE = "Namespace type";
 
 const std::string NAMESPACE_NAME = "Namespace name";
-const std::string TEMPLATE_ID = "Template id";
+const std::string TEMPLATE_ID = "Template-Id";
 
 
-const std::string CONTAINER_NAME_PROP = "Container name:";
+const std::string CONTAINER_NAME_PROP = "Container name";
 const std::string IPC_NAMESPACE_NAME_PROP = "IPC namespace name";
 const std::string USER_NAMESPACE_NAME_PROP = "User namespace name";
 const std::string MNT_NAMESPACE_NAME_PROP = "Mount namespace name";
@@ -59,9 +60,7 @@ public:
 
     void check_if_logs_opened();
 
-    void setup_sockets();
-
-    void get_request_type();
+    bool get_request_type();
 
     void execute_request();
 
@@ -87,18 +86,19 @@ public:
 
     std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> get_run_data();
 
+    void reconnect();
+
 private:
-    uint16_t port;
     std::ofstream log_file_writer;
     std::ifstream log_file_reader;
     uint8_t current_request;
+    uint16_t port;
     int client_socket; // TODO: change to raii fd
-    int server_socket;
-    sockaddr_in server_addr;
-    sockaddr_in client_addr;
+    daemon_socket server_socket;
     ns_pool pool;
     ns_conf_repository repo;
 
     void get_configs();
 };
+
 #endif //JOCKER_SERVER_DAEMON_H

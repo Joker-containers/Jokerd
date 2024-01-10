@@ -28,55 +28,20 @@ void Daemon::check_if_logs_opened() {
     }
 }
 
-void Daemon::setup_sockets() {
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == INVALID_FD) {
-        log_message("Error: Unable to create socket.", true);
-        exit(1);
-    }
-
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port);
-
-    if (bind(server_socket, reinterpret_cast<struct sockaddr *>(&server_addr), sizeof(server_addr)) == -1) {
-        perror("bind");
-        log_message("Error: Unable to bind socket.", true);
-        close(server_socket);
-        exit(1);
-    }
-
-    if (listen(server_socket, 5) == -1) {
-        log_message("Error: Unable to listen on socket.", true);
-        close(server_socket);
-        exit(1);
-    }
-
-    log_message("Daemon listening on port " + std::to_string(port));
-
-    socklen_t clientAddrLen = sizeof(client_addr);
-
-    client_socket = accept(server_socket, reinterpret_cast<struct sockaddr *>(&client_addr), &clientAddrLen);
-    if (client_socket == -1) {
-        log_message("Error: Unable to accept client connection.", true);
-        exit(-1);
-    }
-
-    int flag = 1;
-
-    // Disable Nagle algorithm
-    syscall_wrapper(setsockopt, "setsockopt", client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(int));
-}
-
 Daemon::Daemon(uint16_t port, const std::string& log_file_path):
-log_file_writer(log_file_path), log_file_reader(log_file_path), port(port)
+log_file_writer(log_file_path), log_file_reader(log_file_path), port(port), server_socket(port)
 {
     check_if_logs_opened();
-    setup_sockets();
+    server_socket.server_listen();
+    log_message("Daemon listening on port " + std::to_string(port));
+    client_socket = server_socket.server_accept();
 }
 
-void Daemon::get_request_type() {
-    recv_all(client_socket, &current_request, sizeof(current_request));
+bool Daemon::get_request_type() {
+    if (!recv_all(client_socket, &current_request, sizeof(current_request))){
+        return false;
+    }
+    return true;
 }
 
 void Daemon::execute_request() {
@@ -208,7 +173,7 @@ void Daemon::get_configs(){
 
     log_message("Starting to receive config files...");
 
-    log_message("\nReceiving config size...");
+    log_message("\nReceiving config filename size...");
     uint64_t config_name_size;
     recv_all(client_socket, &config_name_size, sizeof(config_name_size));
     log_message("Received config_file filename length: " + std::to_string(config_name_size));
@@ -224,15 +189,16 @@ void Daemon::get_configs(){
     recv_all(client_socket, &config_size, sizeof(config_size));
     log_message("Received config size: " + std::to_string(config_size));
 
-    log_message("\nReceiving config_file...");
+    log_message("\nReceiving config file...");
     std::vector<char> config_file(config_size);
     recv_all(client_socket, config_file.data(), config_size);
-    log_message("Received config_file.");
+    log_message("Received config file.");
 
     // ======================================================================================
     // Creating a config
-
-    std::ofstream file(config_name.data());
+    std::string actual_config_filename = "./received-configs/";
+    actual_config_filename.insert(actual_config_filename.size(), config_name.data());
+    std::ofstream file(actual_config_filename);
 
     if (!file) {
         log_message("Error: was not able to create a config file on the server");
@@ -240,10 +206,11 @@ void Daemon::get_configs(){
     }
 
     file << config_file.data();
+    file.close();
     log_message("Created config file on the server");
 
 
-    parse_config(config_name.data());
+    parse_config(actual_config_filename);
 }
 
 
@@ -308,10 +275,6 @@ Daemon::~Daemon() {
         // log_message("Closed client socket.");
     }
 
-    if (server_socket != INVALID_FD) {
-        close(server_socket);
-        // log_message("Closed server socket.");
-    }
     log_file_reader.close();
     log_file_writer.close();
 }
@@ -335,8 +298,8 @@ void Daemon::parse_ns_template(std::ifstream &file){
     std::string line;
     int ns_t;
     int template_id;
-    std::getline(file, line);
 
+    std::getline(file, line);
     auto [template_id_prop, template_id_str] = parse_variable(line);
     if (template_id_prop != ID_PROP){
         throw std::runtime_error("Bad config!");
@@ -349,6 +312,7 @@ void Daemon::parse_ns_template(std::ifstream &file){
         throw std::runtime_error("Bad config!");
     }
 
+    std::getline(file, line);
     auto [ns_type_prop, ns_type_string] = parse_variable(line);
     if (ns_type_prop != NAMESPACE_TYPE){
         throw std::runtime_error("Bad config!");
@@ -398,12 +362,12 @@ void Daemon::parse_namespace(std::ifstream &file){
     int template_id;
 
     std::getline(file, line);
-
     auto [name_prop, name] = parse_variable(line);
     if (name_prop != NAMESPACE_NAME || name.empty()){
         throw std::runtime_error("Bad config!");
     }
 
+    std::getline(file, line);
     auto [template_id_prop, template_id_str] = parse_variable(line);
     if (template_id_prop != TEMPLATE_ID){
         throw std::runtime_error("Bad config!");
@@ -416,6 +380,7 @@ void Daemon::parse_namespace(std::ifstream &file){
         throw std::runtime_error("Bad config!");
     }
 
+    std::getline(file, line);
     auto [ns_type_prop, ns_type_string] = parse_variable(line);
     if (ns_type_prop != NAMESPACE_TYPE){
         throw std::runtime_error("Bad config!");
@@ -552,6 +517,13 @@ container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
     }
 
     return opts;
+}
+
+void Daemon::reconnect() {
+    if (client_socket != INVALID_FD){
+        close(client_socket);
+    }
+    client_socket = server_socket.server_accept();
 }
 
 
