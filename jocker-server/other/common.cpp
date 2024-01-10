@@ -64,11 +64,17 @@ void send_all(int socket, void *buffer, size_t size, int flags) {
 
 std::pair<std::string, std::string> parse_variable(const std::string &line){
     auto const delimiter_pos = line.find_first_of(':');
+    std::string value;
+
     if (delimiter_pos == std::string::npos){
         throw std::runtime_error("Invalid formatting!");
     }
     std::string property = line.substr(0, delimiter_pos);
-    const auto variable_start = line.find_first_not_of(' ', delimiter_pos + 1);
-    std::string value = line.substr(variable_start);
+
+    if (delimiter_pos + 1 < line.size()){
+        const auto variable_start = line.find_first_not_of(' ', delimiter_pos + 1);
+        value = line.substr(variable_start);
+    }
+
     return {property, value};
 }

@@ -25,7 +25,7 @@ public:
     ns_group namespaces;
     std::string bin_path;
     std::vector<std::string> bin_arguments;
-    raii_fd output_fd = raii_fd();
+    int output_fd = -1;
     std::string container_name;
     std::string cgroup_name;
 };

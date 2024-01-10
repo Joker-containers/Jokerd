@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <tuple>
 #include <netinet/tcp.h>
+#include <sys/stat.h>
 #include "daemon.h"
 #include "parser.h"
 #include "common.h"
@@ -141,21 +142,23 @@ std::tuple<std::vector<char>, std::vector<char>, std::vector<char>> Daemon::get_
 std::pair<std::string, std::string> Daemon::prepare_container_resources() {
     auto [binary_name_v, binary, binary_config] = get_run_data();
     std::string binary_name = binary_name_v.data();
-    auto config_filename = binary_name + ".joker";
+    auto formatted_binary_name = "./received-binaries/" + binary_name;
+    auto config_filename = "./received-configs/" + binary_name + ".joker";
 
-    std::ifstream check_file(binary_name.data());
+    std::ifstream check_file(formatted_binary_name.data());
     if (check_file.good()) {
-        std::string error_message = "\nError: File with the name " + std::string(binary_name) + " already exists.";
+        std::string error_message = "\nError: File with the name " + std::string(formatted_binary_name) + " already exists.";
         log_message(error_message, true);
         throw binary_exists_error(error_message);
     }
     check_file.close();
 
     log_message("\nSaving binary file...");
-    std::ofstream binary_file(binary_name, std::ios::binary);
+    std::ofstream binary_file(formatted_binary_name, std::ios::binary);
+    syscall_wrapper(chmod, "chmod", formatted_binary_name.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
     binary_file.write(binary.data(), (std::streamsize)binary.size());
     binary_file.close();
-    log_message("Saved binary file to " + std::string(binary_name) + ".\n");
+    log_message("Saved binary file to " + std::string(formatted_binary_name) + ".\n");
 
     log_message("\nSaving config file...");
     std::ofstream config_file(config_filename, std::ios::binary);
@@ -163,7 +166,7 @@ std::pair<std::string, std::string> Daemon::prepare_container_resources() {
     config_file.close();
     log_message("Saved config file to " + config_filename + ".\n");
 
-    return {binary_name, config_filename};
+    return {formatted_binary_name, config_filename};
 }
 
 void Daemon::get_configs(){
@@ -227,15 +230,15 @@ void Daemon::run_container() {
 
     // ======================================================================
     // Parsing config file
-
     std::ifstream file(config_filename);
     auto opts = parse_container_config(file);
+    opts.bin_path = binary_name;
+
 
     // ======================================================================
     // Opening logs file
 
-    std::string container_name;
-    int logs_fd = syscall_wrapper(open, "open", container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
+    int logs_fd = syscall_wrapper(open, "open", opts.container_name.c_str(), O_CREAT | O_RDWR); // TODO: move this in container constructor
 
 
 
@@ -251,7 +254,7 @@ void Daemon::run_container() {
     */
 
     auto container_namespaces = pool.get_ns_group(opts.ns_opt);
-    container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, container_name, opts.cgroup_name, logs_fd);
+    container_options opt = container_options(container_namespaces, opts.bin_args, opts.bin_path, opts.container_name, opts.cgroup_name, logs_fd);
     container c = container(opt);
     sleep(5);
 }
@@ -459,6 +462,7 @@ void Daemon::parse_config(const std::string &file) {
 }
 
 container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
+    // TODO: add arguments!!!
     std::string line;
 
     std::string container_name;
@@ -475,11 +479,11 @@ container_parsed_opts Daemon::parse_container_config(std::ifstream &file) {
     container_parsed_opts opts = container_parsed_opts();
 
     std::getline(file, line);
-
     std::tie(prop, container_name) = parse_variable(line);
     if (prop != CONTAINER_NAME_PROP || container_name.empty()){
         throw std::runtime_error("Bad config!");
     }
+    opts.container_name = container_name;
 
     std::getline(file, line);
     std::tie(prop, ipc_ns_name) = parse_variable(line);

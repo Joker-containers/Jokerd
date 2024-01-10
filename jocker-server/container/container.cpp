@@ -7,7 +7,7 @@
 constexpr size_t CHILD_STACK_SIZE = 1024*1024; // Megabyte /* Stack size for cloned child */
 
 int container::prepare_flags() {
-    int new_ns_flags;
+    int new_ns_flags = 0;
     const auto &namespaces = _namespaces.get_namespaces();
     const auto &mask = _namespaces.get_ns_mask();
     for (size_t i = 0; i < NS_TYPES_NUM; ++i){
@@ -45,6 +45,7 @@ pid_t container::perform_clone(int new_ns_flags, const container_options &opts, 
 void container::init_namespaces(pid_t pid) {
     // Update info in namespaces
     const auto &namespaces = _namespaces.get_namespaces();
+    const auto &ns_collection_mask = _namespaces.get_ns_mask();
     for (const auto &entry: namespaces){
         // There are nullptr entries for non-existing namespaces
         if (entry.get()){
@@ -53,14 +54,14 @@ void container::init_namespaces(pid_t pid) {
     }
 
     // Create handles for new namespaces
-    for (const auto &entry: namespaces) {
-        if (!entry->is_active()){
+    for (size_t i = 0; i < NS_TYPES_NUM; ++i) {
+        const auto &entry = namespaces[i];
+        if (ns_collection_mask[i] && !entry->is_active()){
             int fd = get_ns_handle(static_cast<ns_type>(entry->get_type()), pid); // TODO make this in a better way
             entry->set_fd(fd);
         }
     }
 
-    auto &ns_collection_mask = _namespaces.get_ns_mask();
     for (size_t i = 0; i < namespaces.size(); ++i){
         if (ns_collection_mask[i]){
             namespaces[i]->external_setup_ns();
@@ -73,8 +74,9 @@ void container::init_namespaces(pid_t pid) {
         }
     }
 
-    for(const auto &entry: namespaces){
-        if (!entry->is_active()){
+    for (size_t i = 0; i < NS_TYPES_NUM; ++i){
+        const auto &entry = namespaces[i];
+        if (ns_collection_mask[i] && !entry->is_active()){
             entry->set_active();
         }
     }

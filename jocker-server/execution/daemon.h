@@ -103,7 +103,7 @@ public:
 private:
     std::ofstream log_file_writer;
     std::ifstream log_file_reader;
-    uint8_t current_request;
+    uint8_t current_request{};
     uint16_t port;
     int client_socket; // TODO: change to raii fd
     daemon_socket server_socket;

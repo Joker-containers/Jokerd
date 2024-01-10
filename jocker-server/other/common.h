@@ -12,17 +12,21 @@
 #include <sys/socket.h>
 #include <fstream>
 
+constexpr int MOCK_FILE_DESCRIPTOR = -1;
+
 struct raii_fd {
     int fd;
 
     raii_fd(){
-        fd = -1;
+        fd = MOCK_FILE_DESCRIPTOR;
     }
 
     explicit raii_fd(int fd) : fd(fd) {};
 
     ~raii_fd() {
-        syscall_wrapper(close, "close", fd);
+        if (fd != MOCK_FILE_DESCRIPTOR){
+            syscall_wrapper(close, "close", fd);
+        }
     }
 };
 
