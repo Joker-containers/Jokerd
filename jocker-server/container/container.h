@@ -15,16 +15,12 @@
 #include <sstream>
 #include <fcntl.h>
 
-struct d_resources{
-    cgroup_manager& cgr_manager;
-};
-
 extern const std::unordered_map<ns_type, int> NS_CLONE_FLAG;
 
 /* A class to contain info about container: resource controllers settings, namespaces configurations etc. */
 class container {
 public:
-    container(container_options opts, d_resources &resources);
+    container(container_options opts);
 
     static pid_t perform_clone(int new_ns_flags, const container_options &opts, const ns_group& namespaces);
 
@@ -41,7 +37,7 @@ private:
     std::string _cname;
 
     // Cgroup of this container
-    cgroup _cgroup;
+    std::string _cgroup_name;
 
     // Namespaces of this container
     ns_group _namespaces;

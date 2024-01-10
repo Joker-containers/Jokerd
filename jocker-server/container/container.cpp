@@ -80,7 +80,8 @@ void container::init_namespaces(pid_t pid) {
     }
 }
 
-container::container(container_options opts, d_resources &resources): _cname(std::move(opts.container_name)){ //TODO
+container::container(container_options opts): _cname(std::move(opts.container_name)),
+                                                _cgroup_name(std::move(opts.cgroup_name)){ //TODO
     valid = true; // TODO
     int new_ns_flags = 0;
 
@@ -88,11 +89,9 @@ container::container(container_options opts, d_resources &resources): _cname(std
     new_ns_flags = prepare_flags();
 
     pid_t pid = perform_clone(new_ns_flags, opts, _namespaces);
-    // Create cgroup and set limitations
-    resources.cgr_manager.init_cgroup(_cgroup);
 
     // Add container process to cgroup
-    resources.cgr_manager.add_child(_cgroup, pid);
+    cgroup_manager::add_child(_cgroup_name, pid);
 
     // New namespaces are created now; we should initialize them.
     init_namespaces(pid);
