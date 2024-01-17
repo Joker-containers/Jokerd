@@ -14,43 +14,42 @@
 #include "daemon_socket.h"
 #include "cgroup_manager.h"
 
-constexpr int INVALID_FD = -1;
+inline constexpr int INVALID_FD = -1;
 
 class binary_exists_error: public std::runtime_error {
 public:
     using runtime_error::runtime_error;
 };
 
-const std::string NAMESPACE_TEMPLATE = "Namespace-template";
-const std::string NAMESPACE = "Namespace";
-const std::string CGROUP = "Cgroup";
-const std::string EMPTY = "";
+inline const std::string NAMESPACE_TEMPLATE = "Namespace-template";
+inline const std::string NAMESPACE = "Namespace";
+inline const std::string CGROUP = "Cgroup";
+inline const std::string EMPTY = "";
 
-const std::string ID_PROP = "ID";
-const std::string NAMESPACE_TYPE = "Namespace type";
+inline const std::string ID_PROP = "ID";
+inline const std::string NAMESPACE_TYPE = "Namespace type";
 
-const std::string NAMESPACE_NAME = "Namespace name";
-const std::string TEMPLATE_ID = "Template-Id";
+inline const std::string NAMESPACE_NAME = "Namespace name";
+inline const std::string TEMPLATE_ID = "Template-Id";
 
+inline const std::string CONTAINER_NAME_PROP = "Container name";
+inline const std::string IPC_NAMESPACE_NAME_PROP = "IPC namespace name";
+inline const std::string USER_NAMESPACE_NAME_PROP = "User namespace name";
+inline const std::string MNT_NAMESPACE_NAME_PROP = "Mount namespace name";
+inline const std::string PID_NAMESPACE_NAME_PROP = "PID namespace name";
+inline const std::string NET_NAMESPACE_NAME_PROP = "Network namespace name";
+inline const std::string TIME_NAMESPACE_NAME_PROP = "Time namespace name";
+inline const std::string UTS_NAMESPACE_NAME_PROP = "UTS namespace name";
 
-const std::string CONTAINER_NAME_PROP = "Container name";
-const std::string IPC_NAMESPACE_NAME_PROP = "IPC namespace name";
-const std::string USER_NAMESPACE_NAME_PROP = "User namespace name";
-const std::string MNT_NAMESPACE_NAME_PROP = "Mount namespace name";
-const std::string PID_NAMESPACE_NAME_PROP = "PID namespace name";
-const std::string NET_NAMESPACE_NAME_PROP = "Network namespace name";
-const std::string TIME_NAMESPACE_NAME_PROP = "Time namespace name";
-const std::string UTS_NAMESPACE_NAME_PROP = "UTS namespace name";
-
-const std::string CGROUP_NAME = "Cgroup name";
-const std::string READ_BPS = "Read bps";
-const std::string WRITE_BPS = "Write bps";
-const std::string CFS_QUOTA = "Cfs quota";
-const std::string CFS_PERIOD = "Cfs period";
-const std::string MEMORY_HIGH = "Memory high";
-const std::string MEMORY_MAX = "Memory max";
-const std::string SWAP_MAX = "Swap max";
-const std::string PIDS_MAX = "Pids max";
+inline const std::string CGROUP_NAME = "Cgroup name";
+inline const std::string READ_BPS = "Read bps";
+inline const std::string WRITE_BPS = "Write bps";
+inline const std::string CFS_QUOTA = "Cfs quota";
+inline const std::string CFS_PERIOD = "Cfs period";
+inline const std::string MEMORY_HIGH = "Memory high";
+inline const std::string MEMORY_MAX = "Memory max";
+inline const std::string SWAP_MAX = "Swap max";
+inline const std::string PIDS_MAX = "Pids max";
 
 struct container_parsed_opts {
     explicit container_parsed_opts(std::ifstream &file);
@@ -62,6 +61,16 @@ struct container_parsed_opts {
     std::string container_name = "FIRST CONTAINER";
     std::string cgroup_name;
     ns_options ns_opt = ns_options();
+};
+
+/*
+ * Changing the order here requires changes on the client, so be careful
+ */
+enum request_type{
+    RUN_CONTAINER, // 0
+    SEND_TRACE,    // 1
+    SEND_LOGS,     // 2
+    GET_CONFIGS    // 3
 };
 
 class Daemon {

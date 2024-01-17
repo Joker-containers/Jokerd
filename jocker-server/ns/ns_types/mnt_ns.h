@@ -13,6 +13,8 @@ public:
 
     mnt_ns(std::string name, int fd, pid_t process_pid);
 
+    ~mnt_ns();
+
     void external_setup_ns() override;
 
     void internal_setup_ns() override;

@@ -46,14 +46,13 @@ bool Daemon::get_request_type() {
 }
 
 void Daemon::execute_request() {
-    // TODO change magic constants
-    if (current_request == 0) {
+    if (current_request == RUN_CONTAINER) {
         this->run_container();
-    } else if (current_request == 1) {
+    } else if (current_request == SEND_TRACE) {
         this->send_trace();
-    } else if (current_request == 2) {
+    } else if (current_request == SEND_LOGS) {
         this->send_logs();
-    } else if (current_request == 3){
+    } else if (current_request == GET_CONFIGS){
         this->get_configs();
     } else {
         log_message(std::string("Unrecognized request type: ") + std::to_string(current_request), true);
